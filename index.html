@@ -1,0 +1,2055 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Oman Tab Game</title>
+<meta name="description" content="オマーン館・ターブ 盤上ゲーム">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
+
+:root {
+  --ink: #3a251b;
+  --cream: #f5ecd8;
+  --paper: #eee2cc;
+  --clay: #bd5038;
+  --clay-deep: #963d2d;
+  --brass: #d5a35a;
+  --board: #ead5ad;
+  --board-deep: #b9814e;
+  --green: #376050;
+  --sage: #547365;
+  --pink-zone: #e89da3;
+  --app-font-sans: 'Manrope', sans-serif;
+  --app-font-serif: 'Playfair Display', Georgia, serif;
+  --app-font-mono: 'DM Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+html { min-width: 320px; }
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--app-font-sans);
+}
+button, select { font: inherit; }
+button { cursor: pointer; }
+
+.tab-app {
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 5%, rgba(210,163,90,.26), transparent 26rem),
+    radial-gradient(circle at 90% 90%, rgba(185,79,53,.13), transparent 28rem),
+    var(--paper);
+}
+.tab-app::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .2;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(79,46,28,.13) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(90deg, rgba(79,46,28,.08) 0 1px, transparent 1px 11px);
+  mix-blend-mode: multiply;
+}
+.tab-topbar {
+  position: relative;
+  z-index: 1;
+  max-width: 1460px;
+  margin: 0 auto;
+  padding: 27px clamp(18px, 4vw, 58px) 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.brand-lockup { display: flex; align-items: center; gap: 13px; }
+.brand-mark {
+  width: 48px; height: 48px; flex: 0 0 auto;
+  display: grid; place-items: center;
+  border: 2px solid var(--ink);
+  background: var(--clay);
+  color: var(--cream);
+  transform: rotate(-3deg);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.brand-mark svg { transform: rotate(3deg); }
+.eyebrow {
+  font-family: var(--app-font-mono);
+  letter-spacing: .12em;
+  font-size: 10px;
+  font-weight: 500;
+}
+.brand-name {
+  margin: 4px 0 0;
+  font: 700 24px/1 var(--app-font-serif);
+  letter-spacing: -.03em;
+}
+.top-actions { display: flex; align-items: center; gap: 10px; }
+.icon-button, .quiet-button {
+  border: 1px solid rgba(52,35,28,.32);
+  background: rgba(245,236,216,.65);
+  color: var(--ink);
+  transition: transform .18s ease, background-color .18s ease;
+}
+.icon-button { width: 40px; height: 40px; display: grid; place-items: center; }
+.quiet-button { padding: 10px 14px; font-size: 12px; font-weight: 800; }
+.icon-button:hover, .quiet-button:hover { transform: translateY(-2px); background: var(--cream); }
+.icon-button:focus-visible, .quiet-button:focus-visible, .primary-button:focus-visible,
+.board-cell:focus-visible, .center-start:focus-visible, .difficulty-select:focus-visible {
+  outline: 3px solid var(--brass); outline-offset: 3px;
+}
+
+.game-wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 1460px;
+  margin: 0 auto;
+  padding: 18px clamp(18px, 4vw, 58px) 38px;
+}
+.intro-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 27px;
+}
+.intro-title {
+  margin: 0;
+  max-width: 720px;
+  font: 700 clamp(36px, 5vw, 64px)/.96 var(--app-font-serif);
+  letter-spacing: -.045em;
+}
+.intro-title em { color: var(--clay); font-style: normal; }
+.intro-copy {
+  max-width: 440px;
+  margin: 0 0 5px;
+  color: #765f4d;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(460px, 1fr) minmax(220px, 260px) minmax(230px, 300px);
+  align-items: start;
+  column-gap: clamp(18px, 2.4vw, 34px);
+  row-gap: 14px;
+}
+.side-column { display: grid; gap: 14px; }
+.panel {
+  border: 1px solid rgba(52,35,28,.26);
+  background: rgba(248,240,224,.72);
+  box-shadow: 5px 5px 0 rgba(52,35,28,.12);
+  padding: 16px;
+}
+.panel-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #806955;
+  font: 500 10px/1 var(--app-font-mono);
+  letter-spacing: .08em;
+}
+.panel-heading { margin: 9px 0 0; font: 700 19px/1.1 var(--app-font-serif); }
+.status-panel { border-top: 4px solid var(--clay); }
+.turn-indicator {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.turn-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #e4b538;
+  box-shadow: 0 0 0 4px rgba(228,181,56,.18);
+}
+.turn-dot.tone-green { background: #4ba55a; box-shadow: 0 0 0 4px rgba(75,165,90,.16); }
+.turn-dot.tone-orange { background: #e76536; box-shadow: 0 0 0 4px rgba(231,101,54,.16); }
+.turn-dot.tone-cyan { background: #32bbb5; box-shadow: 0 0 0 4px rgba(50,187,181,.16); }
+.players-list { margin-top: 13px; border-top: 1px solid rgba(52,35,28,.16); }
+.player-row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 9px;
+  min-height: 39px;
+  border-bottom: 1px solid rgba(52,35,28,.12);
+  color: #765f4d;
+  font-size: 11px;
+  transition: background-color .18s ease, padding .18s ease;
+}
+.player-row.active {
+  margin-inline: -7px;
+  padding-inline: 7px;
+  background: rgba(213,163,90,.18);
+  color: var(--ink);
+  font-weight: 800;
+}
+.player-row strong { font: 700 16px var(--app-font-mono); color: var(--ink); }
+.player-row-name { white-space: nowrap; }
+.status-caption {
+  margin-top: 10px;
+  color: #917a61;
+  font: 500 9px/1.4 var(--app-font-mono);
+}
+.primary-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--ink);
+  background: var(--clay);
+  color: var(--cream);
+  padding: 14px 15px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+.primary-button:hover:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+  background: var(--clay-deep);
+}
+.primary-button:disabled { cursor: not-allowed; opacity: .45; }
+.difficulty-wrap { margin-top: 14px; }
+.difficulty-label {
+  display: block;
+  font: 500 10px var(--app-font-mono);
+  color: #806955;
+  margin-bottom: 7px;
+}
+.difficulty-select {
+  width: 100%;
+  appearance: none;
+  border: 1px solid rgba(52,35,28,.3);
+  background: #f8efda;
+  color: var(--ink);
+  padding: 9px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--clay) 50%),
+    linear-gradient(135deg, var(--clay) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 13px, calc(100% - 11px) 13px;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
+.move-controls {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(52,35,28,.16);
+}
+.move-controls-label {
+  color: var(--clay);
+  font: 700 11px/1.35 var(--app-font-mono);
+}
+.move-controls-label strong { font-size: 16px; }
+.piece-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 9px;
+}
+.piece-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border: 1px solid rgba(52,35,28,.25);
+  background: rgba(245,236,216,.66);
+  color: var(--ink);
+  padding: 7px 8px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 800;
+}
+.piece-option small {
+  color: #917a61;
+  font: 500 8px var(--app-font-mono);
+}
+.piece-option.active {
+  border-color: var(--clay);
+  background: rgba(213,163,90,.26);
+  box-shadow: inset 0 0 0 1px var(--clay);
+}
+.piece-option:disabled { cursor: not-allowed; opacity: .42; }
+.move-controls-note {
+  margin-top: 8px;
+  color: #917a61;
+  font: 500 9px/1.4 var(--app-font-mono);
+}
+
+.board-column { min-width: 0; }
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 15px;
+}
+.board-meta {
+  color: #806955;
+  font: 500 10px var(--app-font-mono);
+  letter-spacing: .06em;
+}
+.board-instruction { color: var(--clay); font-size: 12px; font-weight: 800; text-align: right; }
+.board-frame {
+  width: min(100%, 690px);
+  margin: 0 auto;
+  aspect-ratio: 1;
+  padding: clamp(10px, 2vw, 18px);
+  position: relative;
+  border: 4px solid #64412b;
+  background: var(--board-deep);
+  box-shadow: 9px 9px 0 rgba(52,35,28,.2), inset 0 0 0 2px rgba(245,236,216,.42);
+}
+.board-frame::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(245,236,216,.7);
+  pointer-events: none;
+}
+.board-grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 3px;
+  background: #7a5335;
+}
+.board-cell, .center-start {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(116,74,46,.56);
+  padding: 0;
+  overflow: hidden;
+  color: var(--ink);
+  background:
+    repeating-linear-gradient(0deg, rgba(122,83,53,.08) 0 1px, transparent 1px 4px),
+    var(--board);
+  transition: transform .17s ease, background-color .17s ease, box-shadow .17s ease;
+}
+.board-cell:hover:not(:disabled), .center-start:hover {
+  z-index: 2;
+  transform: translateY(-2px);
+  background-color: #f2dfbb;
+}
+.board-cell.inner-route { background-color: #e2c89e; }
+.board-cell.home-zone {
+  background:
+    linear-gradient(45deg, transparent 41%, rgba(94,45,43,.55) 42% 47%, transparent 48%),
+    linear-gradient(-45deg, transparent 41%, rgba(94,45,43,.55) 42% 47%, transparent 48%),
+    var(--pink-zone);
+}
+.board-cell.home-zone.you { box-shadow: inset 0 0 0 3px rgba(228,181,56,.82); }
+.home-label {
+  position: absolute;
+  left: 50%;
+  bottom: 7px;
+  transform: translateX(-50%);
+  color: rgba(94,45,43,.72);
+  font: 700 clamp(7px, 1vw, 10px) var(--app-font-mono);
+  letter-spacing: .04em;
+}
+.board-cell.destination, .center-start.destination {
+  cursor: pointer;
+  background-color: #f3d27c;
+  box-shadow: inset 0 0 0 3px var(--clay), 0 0 0 2px rgba(185,79,53,.4);
+  animation: destination-pulse 1.4s ease-in-out infinite;
+}
+.board-cell.destination::after {
+  content: "移動";
+  position: absolute;
+  left: 50%;
+  top: 5px;
+  transform: translateX(-50%);
+  font: 700 8px var(--app-font-mono);
+  color: var(--clay-deep);
+  letter-spacing: .06em;
+}
+.route-number {
+  position: absolute;
+  left: 5px;
+  top: 4px;
+  color: rgba(85,55,34,.6);
+  font: 500 9px var(--app-font-mono);
+}
+.route-arrow { position: absolute; right: 5px; top: 5px; color: rgba(143,56,39,.7); }
+.center-start {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 10px;
+  background: var(--green);
+  color: var(--cream);
+  border-color: #1f3933;
+}
+.center-start::before {
+  content: "";
+  position: absolute;
+  width: 80%; height: 80%;
+  border: 1px solid rgba(210,163,90,.7);
+  transform: rotate(45deg);
+}
+.center-start::after {
+  content: "";
+  position: absolute;
+  width: 58%; height: 58%;
+  border: 1px solid rgba(210,163,90,.42);
+  transform: rotate(45deg);
+}
+.center-copy {
+  position: relative;
+  z-index: 1;
+  font: 700 clamp(9px, 1.3vw, 14px)/1.2 var(--app-font-serif);
+  letter-spacing: .02em;
+}
+.center-copy small {
+  display: block;
+  margin-top: 5px;
+  font: 500 7px var(--app-font-mono);
+  color: #d2a35a;
+}
+
+.board-piece, .mini-piece, .legend-piece {
+  --piece-size: 42px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--piece-size);
+  height: var(--piece-size);
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  color: #e4b538;
+  pointer-events: none;
+}
+.board-piece::before, .mini-piece::before, .legend-piece::before {
+  content: "";
+  display: block;
+  width: 74%;
+  height: 74%;
+  background: currentColor;
+  border: 2px solid rgba(52,35,28,.65);
+  box-shadow: inset 0 -4px 0 rgba(52,35,28,.18), 3px 4px 0 rgba(52,35,28,.23);
+}
+.board-piece {
+  --piece-size: clamp(24px, 5.2vw, 42px);
+  transition: left .22s ease, top .22s ease, transform .22s ease;
+  filter: drop-shadow(0 0 1px rgba(245,236,216,.9));
+}
+.board-piece.selected {
+  filter: drop-shadow(0 0 0 var(--brass)) drop-shadow(0 0 4px var(--brass));
+  transform: translate(-50%, -50%) scale(1.12);
+}
+.mini-piece, .legend-piece { --piece-size: 22px; position: relative; left: auto; top: auto; transform: none; }
+.legend-piece { --piece-size: 17px; }
+.shape-circle::before { border-radius: 50%; }
+.shape-square::before { border-radius: 3px; }
+.shape-diamond::before { border-radius: 3px; transform: rotate(45deg) scale(.78); }
+.shape-triangle::before {
+  width: 0;
+  height: 0;
+  background: transparent;
+  border: 0;
+  border-left: calc(var(--piece-size) * .33) solid transparent;
+  border-right: calc(var(--piece-size) * .33) solid transparent;
+  border-bottom: calc(var(--piece-size) * .62) solid currentColor;
+  filter: drop-shadow(2px 3px 0 rgba(52,35,28,.25));
+}
+.shape-crescent::before {
+  width: 72%;
+  height: 72%;
+  border-radius: 50%;
+  border: 0;
+  box-shadow: 7px -2px 0 2px var(--pink-zone);
+}
+.tone-yellow { color: #e4b538; }
+.tone-green { color: #4ba55a; }
+.tone-orange { color: #e76536; }
+.tone-cyan { color: #32bbb5; }
+.board-legend {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 13px;
+  color: #806955;
+  font: 500 10px var(--app-font-mono);
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+
+.sticks-panel {
+  position: relative;
+  overflow: hidden;
+  background: #34231c;
+  color: var(--cream);
+  border-color: #34231c;
+  box-shadow: 5px 5px 0 rgba(52,35,28,.23);
+}
+.sticks-panel .panel-label { color: #c8a987; }
+.sticks-panel .panel-heading { color: var(--cream); }
+.roll-spotlight {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 8px;
+  margin-top: 13px;
+  padding: 11px 12px 10px;
+  border: 1px solid rgba(229,201,134,.42);
+  background: rgba(229,201,134,.1);
+}
+.roll-spotlight-label,
+.roll-spotlight-unit {
+  color: #c8a987;
+  font: 500 9px/1.35 var(--app-font-mono);
+}
+.roll-spotlight-unit { text-align: right; }
+.roll-spotlight strong {
+  color: var(--cream);
+  font: 700 42px/.82 var(--app-font-mono);
+  letter-spacing: -.08em;
+}
+.sticks-label {
+  margin-top: 14px;
+  color: #c8a987;
+  font: 500 9px var(--app-font-mono);
+  text-align: center;
+  letter-spacing: .08em;
+}
+.sticks { display: flex; justify-content: center; gap: 10px; margin: 17px 0 13px; }
+.stick {
+  width: 20px;
+  height: 65px;
+  border: 1px solid rgba(245,236,216,.5);
+  position: relative;
+  background: linear-gradient(105deg, #e0c291 0 45%, #9e6e46 46% 54%, #e0c291 55%);
+  transform: rotate(-5deg);
+  box-shadow: 2px 3px 0 rgba(0,0,0,.28);
+  transition: transform .2s ease;
+}
+.stick:nth-child(even) { transform: rotate(6deg); }
+.stick.dark { background: linear-gradient(105deg, #9e6e46 0 45%, #e0c291 46% 54%, #9e6e46 55%); }
+.stick::after {
+  content: "";
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--clay);
+  left: 7px; top: 8px;
+  box-shadow: 0 39px 0 var(--clay);
+  opacity: .85;
+}
+.stick-key {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px 12px;
+  color: #c8a987;
+  font: 500 9px var(--app-font-mono);
+}
+.roll-result {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  text-align: center;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid rgba(245,236,216,.23);
+  color: #e5c986;
+  font: 500 11px var(--app-font-mono);
+}
+.roll-result strong { color: var(--cream); font-size: 32px; line-height: 1; }
+.roll-result span { color: var(--cream); }
+.roll-result small { flex-basis: 100%; color: #e5c986; font: 500 9px var(--app-font-mono); }
+.tab-burst {
+  animation: tab-burst-glow 1.4s ease-out both;
+}
+.tab-burst::before,
+.tab-burst::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 47%;
+  width: 90px;
+  height: 90px;
+  border: 2px solid rgba(229,201,134,.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(.35);
+  pointer-events: none;
+  animation: tab-ripple 1.2s ease-out both;
+}
+.tab-burst::after {
+  width: 150px;
+  height: 150px;
+  animation-delay: .15s;
+}
+.tab-burst-label {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-4deg);
+  padding: 7px 12px;
+  background: var(--brass);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 rgba(0,0,0,.28);
+  font: 800 16px var(--app-font-serif);
+  white-space: nowrap;
+  animation: tab-label-pop 1.2s ease-out both;
+}
+.tab-burst-label span { color: var(--clay-deep); }
+.board-event {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 142px;
+  padding: 12px 16px 11px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 rgba(52,35,28,.3);
+  text-align: center;
+  pointer-events: none;
+  animation: board-event-pop 1.5s ease-out both;
+}
+.board-event strong {
+  font: 800 24px/1 var(--app-font-serif);
+}
+.board-event span {
+  font: 500 9px var(--app-font-mono);
+}
+.board-event-goal {
+  background: var(--brass);
+  color: var(--ink);
+}
+.board-event-capture {
+  background: var(--clay);
+  color: var(--cream);
+  animation-name: board-capture-pop;
+}
+.history-panel { max-height: 270px; overflow: hidden; }
+.history-list { list-style: none; padding: 0; margin: 13px 0 0; display: grid; gap: 10px; }
+.history-list li {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 8px;
+  color: #765f4d;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.history-index { color: var(--clay); font: 500 10px var(--app-font-mono); }
+.rules-panel { margin-top: 14px; background: rgba(230,212,181,.6); }
+.rules-copy { margin: 11px 0 0; color: #765f4d; font-size: 11px; line-height: 1.65; }
+.rules-note {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(52,35,28,.15);
+  color: #917a61;
+  font: italic 10px/1.5 var(--app-font-serif);
+}
+.winner-banner {
+  margin-top: 13px;
+  padding: 13px;
+  background: var(--brass);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  font: 700 15px var(--app-font-serif);
+  text-align: center;
+}
+.winner-banner small { display: block; margin-top: 4px; font: 500 10px var(--app-font-mono); }
+.winner-overlay {
+  position: absolute;
+  z-index: 20;
+  inset: clamp(12px, 4%, 26px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid var(--brass);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(213,163,90,.28), transparent 42%),
+    rgba(52,35,28,.94);
+  color: var(--cream);
+  box-shadow: 0 0 0 4px rgba(52,35,28,.2), 0 0 34px rgba(213,163,90,.65);
+  animation: winner-overlay-in .55s cubic-bezier(.2,.8,.2,1) both;
+}
+.winner-overlay::before {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(229,201,134,.13) 0deg 10deg,
+    transparent 10deg 25deg
+  );
+  animation: winner-rays 14s linear infinite;
+}
+.winner-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(229,201,134,.45);
+  pointer-events: none;
+}
+.winner-overlay-content {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 300px);
+  padding: 13px;
+  text-align: center;
+}
+.winner-trophy {
+  color: var(--brass);
+  filter: drop-shadow(0 0 9px rgba(229,201,134,.7));
+  animation: winner-trophy-bob 1.8s ease-in-out infinite;
+}
+.winner-kicker {
+  display: block;
+  margin-top: 3px;
+  color: #e5c986;
+  font: 500 8px var(--app-font-mono);
+  letter-spacing: .18em;
+}
+.winner-overlay h2 {
+  margin: 4px 0 0;
+  color: var(--cream);
+  font: 700 clamp(22px, 5vw, 30px)/1 var(--app-font-serif);
+}
+.winner-name {
+  display: block;
+  margin-top: 6px;
+  color: #e5c986;
+  font: 800 15px var(--app-font-serif);
+}
+.ranking-list {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(52,35,28,.2);
+  text-align: left;
+}
+.winner-overlay .ranking-list {
+  margin-top: 10px;
+  border-top-color: rgba(229,201,134,.4);
+}
+.ranking-row {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 6px;
+  background: rgba(245,236,216,.35);
+  font: 600 10px var(--app-font-sans);
+}
+.winner-overlay .ranking-row {
+  background: rgba(245,236,216,.1);
+  color: var(--cream);
+}
+.winner-overlay .ranking-row:first-child {
+  background: rgba(213,163,90,.3);
+  color: var(--cream);
+}
+.winner-overlay .ranking-row small {
+  color: #e5c986;
+}
+.ranking-row:first-child { background: rgba(245,236,216,.65); }
+.ranking-rank { font: 700 11px var(--app-font-mono); }
+.ranking-row small { margin: 0; font: 500 9px var(--app-font-mono); }
+.replay-button {
+  margin-top: 12px;
+  background: var(--green);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.winner-overlay .replay-button {
+  width: min(100%, 220px);
+  margin-inline: auto;
+}
+.replay-button:hover:not(:disabled) { background: #294b3f; }
+.reset-button {
+  width: 100%;
+  margin-top: 0;
+  text-align: center;
+}
+.footer-note {
+  margin-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #917a61;
+  font: 500 9px var(--app-font-mono);
+}
+
+@keyframes destination-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 3px var(--clay), 0 0 0 2px rgba(185,79,53,.34); }
+  50% { box-shadow: inset 0 0 0 3px var(--clay), 0 0 0 6px rgba(185,79,53,.08); }
+}
+@keyframes tab-burst-glow {
+  0%, 100% { box-shadow: 5px 5px 0 rgba(52,35,28,.23); }
+  18% { box-shadow: 5px 5px 0 rgba(52,35,28,.23), 0 0 0 8px rgba(213,163,90,.3), 0 0 34px rgba(213,163,90,.75); }
+}
+@keyframes tab-ripple {
+  0% { opacity: .9; transform: translate(-50%, -50%) scale(.35); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+}
+@keyframes tab-label-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(-4deg) scale(.45); }
+  18% { opacity: 1; transform: translate(-50%, -50%) rotate(-4deg) scale(1.08); }
+  34%, 82% { opacity: 1; transform: translate(-50%, -50%) rotate(-4deg) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(-4deg) scale(.92); }
+}
+@keyframes board-event-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.35) rotate(-6deg); }
+  14% { opacity: 1; transform: translate(-50%, -50%) scale(1.1) rotate(2deg); }
+  28%, 78% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+  100% { opacity: 0; transform: translate(-50%, -65%) scale(.92) rotate(0); }
+}
+@keyframes board-capture-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.45) rotate(7deg); }
+  16% { opacity: 1; transform: translate(-50%, -50%) scale(1.08) rotate(-3deg); }
+  31%, 78% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+  100% { opacity: 0; transform: translate(-50%, -55%) scale(.94) rotate(0); }
+}
+@keyframes winner-overlay-in {
+  0% { opacity: 0; transform: scale(.8) rotate(-2deg); }
+  70% { opacity: 1; transform: scale(1.03) rotate(.5deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes winner-rays {
+  to { transform: rotate(360deg); }
+}
+@keyframes winner-trophy-bob {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-5px) rotate(4deg); }
+}
+@media (min-width: 1121px) {
+  .left-column,
+  .right-column { display: contents; }
+  .board-column { grid-column: 1; grid-row: 1 / span 3; }
+  .right-column > .sticks-panel { grid-column: 2; grid-row: 1; }
+  .left-column > .action-panel { grid-column: 3; grid-row: 1; }
+  .left-column > .status-panel { grid-column: 2; grid-row: 2; }
+  .right-column > .history-panel { grid-column: 3; grid-row: 2; }
+  .right-column > .rules-panel,
+  .right-column > .rules-trigger {
+    grid-column: 2 / 4;
+    grid-row: 3;
+    margin-top: 0;
+  }
+  .right-column > .reset-button {
+    grid-column: 2 / 4;
+    grid-row: 4;
+  }
+}
+@media (max-width: 1120px) {
+  .game-layout { grid-template-columns: minmax(390px, 1fr) minmax(340px, 460px); }
+  .board-column { grid-column: 1; grid-row: 1 / span 5; }
+  .left-column,
+  .right-column { display: contents; }
+  .right-column > .sticks-panel { grid-column: 2; grid-row: 1; }
+  .left-column > .action-panel { grid-column: 2; grid-row: 2; }
+  .left-column > .status-panel { grid-column: 2; grid-row: 3; }
+  .right-column > .history-panel { grid-column: 2; grid-row: 4; }
+  .right-column > .rules-panel,
+  .right-column > .rules-trigger {
+    grid-column: 2;
+    grid-row: 5;
+    margin-top: 0;
+  }
+  .right-column > .reset-button {
+    grid-column: 2;
+    grid-row: 6;
+  }
+}
+@media (max-width: 760px) {
+  .tab-topbar { padding-top: 18px; }
+  .brand-name { font-size: 21px; }
+  .top-actions .quiet-button { display: none; }
+  .intro-row { display: block; margin-bottom: 19px; }
+  .intro-title { font-size: 42px; }
+  .intro-copy { margin-top: 12px; max-width: none; }
+  .game-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(122px, .95fr);
+    gap: 18px 10px;
+  }
+  .board-column {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    order: 0;
+    width: 100%;
+  }
+  .left-column,
+  .right-column { display: contents; }
+  .right-column > .sticks-panel { grid-column: 1; grid-row: 2; }
+  .left-column > .action-panel { grid-column: 2; grid-row: 2; }
+  .left-column > .status-panel { grid-column: 1; grid-row: 3; }
+  .right-column > .history-panel { grid-column: 2; grid-row: 3; }
+  .right-column > .rules-panel,
+  .right-column > .rules-trigger {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    margin-top: 0;
+  }
+  .right-column > .reset-button {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+  .action-panel { min-width: 0; padding: 10px; }
+  .action-panel .primary-button { padding-inline: 8px; font-size: 11px; }
+  .action-panel .difficulty-wrap { margin-top: 12px; }
+  .board-frame { width: 100%; padding: 10px; }
+  .panel { box-shadow: 3px 3px 0 rgba(52,35,28,.12); }
+}
+@media (max-width: 480px) {
+  .game-wrap { padding-inline: 12px; }
+  .tab-topbar { padding-inline: 12px; }
+  .intro-title { font-size: 36px; }
+  .board-header { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .board-instruction { text-align: left; }
+  .footer-note { display: block; line-height: 1.8; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+/* Error fallback utilities used by the embedded error boundary. */
+.min-h-screen{min-height:100vh} .w-full{width:100%} .flex{display:flex} .items-center{align-items:center} .justify-center{justify-content:center} .bg-gray-50{background:#f9fafb} .p-6{padding:1.5rem} .max-w-lg{max-width:32rem} .text-center{text-align:center} .text-xl{font-size:1.25rem} .font-semibold{font-weight:600} .text-gray-900{color:#111827} .mt-2{margin-top:.5rem} .text-sm{font-size:.875rem} .text-gray-600{color:#4b5563} .mt-4{margin-top:1rem} .overflow-x-auto{overflow-x:auto} .rounded{border-radius:.25rem} .bg-gray-100{background:#f3f4f6} .p-3{padding:.75rem} .text-left{text-align:left} .text-xs{font-size:.75rem} .text-gray-800{color:#1f2937} .bg-gray-900{background:#111827} .px-4{padding-left:1rem;padding-right:1rem} .py-2{padding-top:.5rem;padding-bottom:.5rem} .text-white{color:white} .hover\:bg-gray-700:hover{background:#374151}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+<script type="text/babel" data-presets="typescript,react">
+const { Component } = React;
+
+interface ErrorFallbackProps {
+  error: Error;
+  resetError: () => void;
+}
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  FallbackComponent?: ComponentType<ErrorFallbackProps>;
+  /** Changing this clears a caught error. Pass the route to recover on navigation. */
+  resetKey?: unknown;
+}
+
+interface ErrorBoundaryState {
+  error: Error | null;
+}
+
+function toError(value: unknown): Error {
+  if (value instanceof Error) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    return new Error(value);
+  }
+  try {
+    return new Error(JSON.stringify(value));
+  } catch {
+    return new Error(String(value));
+  }
+}
+
+function DefaultFallback({ error, resetError }: ErrorFallbackProps) {
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-6">
+      <div className="max-w-lg w-full text-center">
+        <h1 className="text-xl font-semibold text-gray-900">
+          Something went wrong
+        </h1>
+        <p className="mt-2 text-sm text-gray-600">
+          This part of the app hit an error. The rest of the app is still
+          running.
+        </p>
+        {/* Dev only: messages can carry API responses and other internals. */}
+        null
+        <button
+          type="button"
+          onClick={resetError}
+          className="mt-4 rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  );
+}
+
+class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  state: ErrorBoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
+    return { error: toError(error) };
+  }
+
+  componentDidCatch(error: unknown, info: ErrorInfo): void {
+    console.error(
+      'ErrorBoundary caught an error:',
+      toError(error),
+      info.componentStack,
+    );
+  }
+
+  componentDidUpdate(prevProps: ErrorBoundaryProps): void {
+    if (
+      this.state.error !== null &&
+      prevProps.resetKey !== this.props.resetKey
+    ) {
+      this.resetError();
+    }
+  }
+
+  resetError = (): void => {
+    this.setState({ error: null });
+  };
+
+  render(): ReactNode {
+    const { error } = this.state;
+    if (error === null) {
+      return this.props.children;
+    }
+    const Fallback = this.props.FallbackComponent ?? DefaultFallback;
+    return <Fallback error={error} resetError={this.resetError} />;
+  }
+}
+
+
+function SvgIcon({size=24, strokeWidth=2, className='', children}) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">{children}</svg>;
+}
+const ArrowDown = (p) => <SvgIcon {...p}><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></SvgIcon>;
+const ArrowLeft = (p) => <SvgIcon {...p}><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></SvgIcon>;
+const ArrowRight = (p) => <SvgIcon {...p}><path d="m12 5 7 7-7 7"/><path d="M5 12h14"/></SvgIcon>;
+const ArrowUp = (p) => <SvgIcon {...p}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></SvgIcon>;
+const CircleHelp = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/><path d="M9.5 9a2.5 2.5 0 1 1 4.1 1.9c-.9.7-1.6 1.2-1.6 2.6"/><path d="M12 17h.01"/></SvgIcon>;
+const Info = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></SvgIcon>;
+const Sparkles = (p) => <SvgIcon {...p}><path d="m12 3-1.1 4.1L7 8.2l3.9 1.1L12 13l1.1-3.7L17 8.2l-3.9-1.1L12 3Z"/><path d="m19 14-.7 2.3L16 17l2.3.7L19 20l.7-2.3L22 17l-2.3-.7L19 14Z"/><path d="m5 14-.6 1.9L2.5 16.5l1.9.6L5 19l.6-1.9 1.9-.6-1.9-.6L5 14Z"/></SvgIcon>;
+const Trophy = (p) => <SvgIcon {...p}><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v2a4 4 0 0 0 4 4"/><path d="M17 6h3v2a4 4 0 0 1-4 4"/></SvgIcon>;
+const Volume2 = (p) => <SvgIcon {...p}><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></SvgIcon>;
+const VolumeX = (p) => <SvgIcon {...p}><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/></SvgIcon>;
+const Zap = (p) => <SvgIcon {...p}><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></SvgIcon>;
+
+const { useEffect, useMemo, useRef, useState } = React;
+
+
+type PlayerId = 'you' | 'top' | 'right' | 'left';
+type Winner = PlayerId | null;
+type Difficulty = 'weak' | 'normal' | 'strong';
+type Coord = readonly [number, number];
+type PieceState = Record<PlayerId, number[]>;
+type LastRoll = {
+  value: number;
+  owner: PlayerId;
+  isTab: boolean;
+  total: number;
+};
+type RankingEntry = {
+  player: PlayerId;
+  goals: number;
+  rank: number;
+};
+type SoundName = 'roll' | 'move' | 'capture' | 'goal' | 'tab' | 'extra' | 'select' | 'reset' | 'ui' | 'win';
+type Celebration = 'capture' | 'goal';
+
+const players: PlayerId[] = ['you', 'top', 'right', 'left'];
+const cpuPlayers: PlayerId[] = ['top', 'right', 'left'];
+const turnOrder: PlayerId[] = ['you', 'top', 'right', 'left'];
+
+const playerMeta: Record<
+  PlayerId,
+  {
+    name: string;
+    shortName: string;
+    color: string;
+    shape: string;
+    startLabel: string;
+  }
+> = {
+  you: {
+    name: 'あなた',
+    shortName: 'あなた',
+    color: 'yellow',
+    shape: 'crescent',
+    startLabel: '下のマディナ',
+  },
+  top: {
+    name: '上のCPU',
+    shortName: '上',
+    color: 'green',
+    shape: 'diamond',
+    startLabel: '上のマディナ',
+  },
+  right: {
+    name: '右のCPU',
+    shortName: '右',
+    color: 'orange',
+    shape: 'triangle',
+    startLabel: '右のマディナ',
+  },
+  left: {
+    name: '左のCPU',
+    shortName: '左',
+    color: 'cyan',
+    shape: 'circle',
+    startLabel: '左のマディナ',
+  },
+};
+
+// 写真の盤面を、外周（反時計回り）→内周（時計回り）の順で定義。
+const outerTrack: Coord[] = [
+  [0, 2],
+  [0, 1],
+  [0, 0],
+  [1, 0],
+  [2, 0],
+  [3, 0],
+  [4, 0],
+  [4, 1],
+  [4, 2],
+  [4, 3],
+  [4, 4],
+  [3, 4],
+  [2, 4],
+  [1, 4],
+  [0, 4],
+  [0, 3],
+];
+
+const innerTrack: Coord[] = [
+  [1, 2],
+  [1, 3],
+  [2, 3],
+  [3, 3],
+  [3, 2],
+  [3, 1],
+  [2, 1],
+  [1, 1],
+];
+
+const startOffset: Record<PlayerId, number> = {
+  you: 8,
+  top: 0,
+  right: 12,
+  left: 4,
+};
+
+const innerEntry: Record<PlayerId, number> = {
+  you: 5,
+  top: 1,
+  right: 3,
+  left: 7,
+};
+
+const initialPieces: PieceState = {
+  you: [0, 0, 0, 0],
+  top: [0, 0, 0, 0],
+  right: [0, 0, 0, 0],
+  left: [0, 0, 0, 0],
+};
+
+function routeFor(player: PlayerId): Coord[] {
+  const outer = Array.from(
+    { length: outerTrack.length },
+    (_, index) => outerTrack[(startOffset[player] + index) % outerTrack.length],
+  );
+  const inner = Array.from(
+    { length: innerTrack.length },
+    (_, index) => innerTrack[(innerEntry[player] + index) % innerTrack.length],
+  );
+  return [...outer, ...inner];
+}
+
+function coordKey(coord: Coord) {
+  return `${coord[0]}-${coord[1]}`;
+}
+
+function getPieceCoord(player: PlayerId, progress: number): Coord | null {
+  if (progress >= 24) return null;
+  return routeFor(player)[progress];
+}
+
+function isMadinaCoord(coord: Coord) {
+  return players.some((player) => coordKey(routeFor(player)[0]) === coordKey(coord));
+}
+
+function getDirection(row: number, column: number) {
+  const directions: Record<string, 'left' | 'down' | 'right' | 'up'> = {
+    '0-0': 'down',
+    '0-1': 'left',
+    '0-2': 'left',
+    '0-3': 'left',
+    '0-4': 'left',
+    '1-0': 'down',
+    '1-1': 'right',
+    '1-2': 'right',
+    '1-3': 'down',
+    '1-4': 'up',
+    '2-0': 'down',
+    '2-1': 'up',
+    '2-3': 'down',
+    '2-4': 'up',
+    '3-0': 'down',
+    '3-1': 'up',
+    '3-2': 'up',
+    '3-3': 'left',
+    '3-4': 'up',
+    '4-0': 'right',
+    '4-1': 'up',
+    '4-2': 'right',
+    '4-3': 'right',
+    '4-4': 'up',
+  };
+  const direction = directions[`${row}-${column}`] ?? 'up';
+  const icons = {
+    left: <ArrowLeft size={13} strokeWidth={2.5} />,
+    down: <ArrowDown size={13} strokeWidth={2.5} />,
+    right: <ArrowRight size={13} strokeWidth={2.5} />,
+    up: <ArrowUp size={13} strokeWidth={2.5} />,
+  };
+  return icons[direction];
+}
+
+function rollStickCount() {
+  const outcome = Math.floor(Math.random() * 16);
+  if (outcome === 0) return 0;
+  if (outcome <= 4) return 1;
+  if (outcome <= 10) return 2;
+  if (outcome <= 14) return 3;
+  return 4;
+}
+
+function freshSticks(value: number) {
+  const sticks = [false, false, false, false];
+  for (let index = 0; index < value; index += 1) sticks[index] = true;
+  for (let index = sticks.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [sticks[index], sticks[swapIndex]] = [sticks[swapIndex], sticks[index]];
+  }
+  return sticks;
+}
+
+function stackOffset(index: number, count: number): Coord {
+  if (count === 2) return index === 0 ? [-11, 0] : [11, 0];
+  if (count === 3) {
+    const offsets: Coord[] = [[-10, -8], [10, -8], [0, 11]];
+    return offsets[index] ?? [0, 0];
+  }
+  if (count >= 4) {
+    const offsets: Coord[] = [[-10, -10], [10, -10], [-10, 10], [10, 10]];
+    return offsets[index] ?? [0, 0];
+  }
+  return [0, 0];
+}
+
+function countOnBoard(pieceList: number[]) {
+  return pieceList.filter((progress) => progress < 24).length;
+}
+
+function createRanking(state: PieceState): RankingEntry[] {
+  return [...players]
+    .sort((a, b) => {
+      const goalDifference = b === a
+        ? 0
+        : state[b].filter((progress) => progress === 24).length
+          - state[a].filter((progress) => progress === 24).length;
+      return goalDifference || players.indexOf(a) - players.indexOf(b);
+    })
+    .map((player, index) => ({
+      player,
+      goals: state[player].filter((progress) => progress === 24).length,
+      rank: index + 1,
+    }));
+}
+
+function App() {
+  const [pieces, setPieces] = useState<PieceState>(initialPieces);
+  const [turn, setTurn] = useState<PlayerId>('you');
+  const [rolled, setRolled] = useState<number | null>(null);
+  const [lastRoll, setLastRoll] = useState<LastRoll | null>(null);
+  const [sticks, setSticks] = useState([false, false, false, false]);
+  const [selectedPiece, setSelectedPiece] = useState<number | null>(null);
+  const [movedPieceIndices, setMovedPieceIndices] = useState<number[]>([]);
+  const [awaitingTabRoll, setAwaitingTabRoll] = useState(false);
+  const [extraTurnPending, setExtraTurnPending] = useState(false);
+  const [history, setHistory] = useState<string[]>(['盤面の準備ができました。棒を振ってください。']);
+  const [winner, setWinner] = useState<Winner>(null);
+  const [ranking, setRanking] = useState<RankingEntry[] | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [tabEffect, setTabEffect] = useState(false);
+  const [celebration, setCelebration] = useState<{ type: Celebration; id: number } | null>(null);
+  const cpuThinking = useRef(false);
+  const audioContext = useRef<AudioContext | null>(null);
+  const celebrationId = useRef(0);
+
+  const routeIndex = useMemo(() => {
+    const map = new Map<string, number>();
+    outerTrack.forEach((coord, index) => map.set(coordKey(coord), index));
+    innerTrack.forEach((coord, index) => map.set(coordKey(coord), index + 16));
+    return map;
+  }, []);
+
+  const playerRouteLabels = useMemo(() => {
+    const map = new Map<string, string>();
+    routeFor('you').forEach((coord, index) => {
+      map.set(coordKey(coord), index === 0 ? 'M' : String(index).padStart(2, '0'));
+    });
+    return map;
+  }, []);
+
+  const selectedMoveLimit = selectedPiece !== null && rolled !== null
+    ? Math.min(rolled, 24 - pieces.you[selectedPiece])
+    : 0;
+
+  const unmovedPieceIndices = pieces.you
+    .map((progress, index) => progress < 24 && !movedPieceIndices.includes(index) ? index : -1)
+    .filter((index) => index >= 0);
+  const mustUseAllRemaining = selectedPiece !== null
+    && unmovedPieceIndices.length === 1
+    && unmovedPieceIndices[0] === selectedPiece;
+
+  const selectedDestinations = selectedPiece !== null && rolled !== null
+    ? (mustUseAllRemaining
+      ? [selectedMoveLimit]
+      : Array.from({ length: selectedMoveLimit }, (_, index) => index + 1)
+    ).map((amount) => ({
+      amount,
+      coord: getPieceCoord('you', pieces.you[selectedPiece] + amount) ?? [2, 2] as Coord,
+    }))
+    : [];
+
+  const addHistory = (entry: string) => {
+    setHistory((current) => [entry, ...current].slice(0, 8));
+  };
+
+  const playSound = (name: SoundName) => {
+    if (!soundEnabled || typeof window === 'undefined') return;
+    const AudioContextConstructor = window.AudioContext
+      ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextConstructor) return;
+
+    const context = audioContext.current ?? new AudioContextConstructor();
+    audioContext.current = context;
+    if (context.state === 'suspended') void context.resume();
+
+    const patterns: Record<SoundName, Array<[number, number, number, OscillatorType]>> = {
+      roll: [[180, 0, .07, 'triangle'], [240, .08, .07, 'triangle'], [320, .16, .09, 'triangle']],
+      move: [[300, 0, .1, 'sine']],
+      capture: [[150, 0, .12, 'square'], [100, .12, .18, 'square']],
+      goal: [[440, 0, .13, 'sine'], [554, .14, .13, 'sine'], [659, .28, .24, 'sine']],
+      tab: [[220, 0, .12, 'sawtooth'], [330, .13, .12, 'sawtooth'], [520, .26, .32, 'sine']],
+      extra: [[392, 0, .11, 'sine'], [523, .12, .2, 'sine']],
+      select: [[520, 0, .06, 'sine']],
+      reset: [[260, 0, .08, 'triangle'], [180, .1, .12, 'triangle']],
+      ui: [[620, 0, .05, 'sine']],
+      win: [[392, 0, .12, 'sine'], [523, .13, .12, 'sine'], [659, .26, .14, 'sine'], [784, .41, .32, 'sine']],
+    };
+
+    patterns[name].forEach(([frequency, delay, duration, oscillatorType]) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const startAt = context.currentTime + delay;
+      oscillator.type = oscillatorType;
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+      gain.gain.setValueAtTime(0.0001, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.12, startAt + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(startAt);
+      oscillator.stop(startAt + duration + 0.02);
+    });
+  };
+
+  const triggerTabEffect = () => {
+    setTabEffect(true);
+    window.setTimeout(() => setTabEffect(false), 1400);
+    playSound('tab');
+  };
+
+  const triggerCelebration = (type: Celebration) => {
+    celebrationId.current += 1;
+    const id = celebrationId.current;
+    setCelebration({ type, id });
+    window.setTimeout(() => {
+      setCelebration((current) => (current?.id === id ? null : current));
+    }, 1500);
+  };
+
+  const nextTurn = (current: PlayerId) => {
+    const index = turnOrder.indexOf(current);
+    return turnOrder[(index + 1) % turnOrder.length];
+  };
+
+  const getLegalMoves = (player: PlayerId, _value: number, state: PieceState) =>
+    state[player]
+      .map((progress, index) => (progress < 24 ? index : -1))
+      .filter((index) => index >= 0);
+
+  const countCaptures = (player: PlayerId, target: Coord, state: PieceState) =>
+    players
+      .filter((other) => other !== player)
+      .reduce((total, other) => {
+        return total + state[other].filter(
+          (progress) => progress < 24 && getPieceCoord(other, progress) !== null
+            && coordKey(getPieceCoord(other, progress) as Coord) === coordKey(target),
+        ).length;
+      }, 0);
+
+  // 「カット」は着地点だけでなく、移動中に相手のいるマスを追い越した場合も成立する。
+  // マディナは安全地帯なので、通過・到着のどちらもカット対象にしない。
+  const getCapturedPlayersAlongMove = (
+    player: PlayerId,
+    fromProgress: number,
+    moveValue: number,
+    state: PieceState,
+  ) => {
+    const captured = new Set<PlayerId>();
+
+    for (let step = 1; step <= moveValue; step += 1) {
+      const progress = fromProgress + step;
+      const coord = getPieceCoord(player, progress);
+      if (!coord || isMadinaCoord(coord)) continue;
+
+      players
+        .filter((other) => other !== player)
+        .forEach((other) => {
+          const occupied = state[other].some(
+            (otherProgress) => otherProgress < 24
+              && getPieceCoord(other, otherProgress) !== null
+              && coordKey(getPieceCoord(other, otherProgress) as Coord) === coordKey(coord),
+          );
+          if (occupied) captured.add(other);
+        });
+    }
+
+    return [...captured];
+  };
+
+  const performMove = (player: PlayerId, pieceIndex: number, value: number) => {
+    const current = pieces;
+    const movingFrom = current[player][pieceIndex];
+    const targetProgress = movingFrom + value;
+    const targetCoord = getPieceCoord(player, targetProgress);
+    const nextPieces: PieceState = {
+      you: [...current.you],
+      top: [...current.top],
+      right: [...current.right],
+      left: [...current.left],
+    };
+    nextPieces[player][pieceIndex] = targetProgress;
+    const capturedPlayers = getCapturedPlayersAlongMove(player, movingFrom, value, current);
+    const capturedByPlayer = capturedPlayers.map((other) => playerMeta[other].shortName);
+    const targetIsMadina = targetCoord ? isMadinaCoord(targetCoord) : false;
+
+    capturedPlayers.forEach((other) => {
+      nextPieces[other] = nextPieces[other].map((progress) => {
+        const coord = getPieceCoord(other, progress);
+        if (progress < 24 && coord && !isMadinaCoord(coord)) {
+          for (let step = 1; step <= value; step += 1) {
+            const passedCoord = getPieceCoord(player, movingFrom + step);
+            if (passedCoord && !isMadinaCoord(passedCoord) && coordKey(coord) === coordKey(passedCoord)) {
+              return 0;
+            }
+          }
+        }
+        return progress;
+      });
+    });
+
+    setPieces(nextPieces);
+    if (player === 'you') {
+      setMovedPieceIndices((current) => (
+        current.includes(pieceIndex) ? current : [...current, pieceIndex]
+      ));
+    }
+    setSelectedPiece(null);
+
+    const playerName = playerMeta[player].name;
+    if (targetProgress === 24) {
+      addHistory(`${playerName}の駒がゴールしました。`);
+    } else if (capturedByPlayer.length > 0) {
+      addHistory(`${playerName}が${capturedByPlayer.join('・')}の駒をマディナへ戻しました。`);
+    } else {
+      addHistory(`${playerName}が${value}マス進みました。`);
+    }
+
+    // マディナは安全地帯。同じマディナに駒が重なっても、
+    // カット扱いにも連続手番のきっかけにもならない。
+    const grantsExtraTurn = !targetIsMadina && (
+      targetProgress === 24 || capturedByPlayer.length > 0
+    );
+    if (targetProgress === 24) {
+      playSound('goal');
+      triggerCelebration('goal');
+    } else if (capturedByPlayer.length > 0) {
+      playSound('capture');
+      triggerCelebration('capture');
+    } else {
+      playSound('move');
+    }
+    const remainingPoints = player === 'you' && rolled !== null
+      ? Math.max(0, rolled - value)
+      : 0;
+    const movedByPlayer = player === 'you'
+      ? [...movedPieceIndices, pieceIndex]
+      : [];
+    const hasUnmovedPieces = player === 'you'
+      ? nextPieces.you.some((progress, index) => progress < 24 && !movedByPlayer.includes(index))
+      : true;
+
+    if (nextPieces[player].every((progress) => progress === 24)) {
+      setRanking(createRanking(nextPieces));
+      setWinner(player);
+      setTurn(player);
+      setRolled(null);
+      setAwaitingTabRoll(false);
+      setExtraTurnPending(false);
+      setMovedPieceIndices([]);
+      playSound('win');
+      addHistory(`${playerName}が4つの駒をすべてゴールさせました。`);
+    } else if (remainingPoints > 0 && hasUnmovedPieces) {
+      setRolled(remainingPoints);
+      setTurn(player);
+      if (grantsExtraTurn) setExtraTurnPending(true);
+      addHistory(`残り${remainingPoints}マスを別の駒にも分けて使えます。`);
+    } else if (grantsExtraTurn || extraTurnPending) {
+      setRolled(null);
+      setAwaitingTabRoll(false);
+      setExtraTurnPending(false);
+      setMovedPieceIndices([]);
+      setTurn(player);
+      window.setTimeout(() => playSound('extra'), 220);
+      addHistory(`${playerName}の連続手番です。もう一度棒を振れます。`);
+    } else {
+      setRolled(null);
+      setAwaitingTabRoll(false);
+      setMovedPieceIndices([]);
+      setTurn(nextTurn(player));
+      if (remainingPoints > 0) {
+        addHistory(`残り${remainingPoints}マスを使える駒がないため、手番を終了します。`);
+      }
+    }
+  };
+
+  const handleRoll = () => {
+    if (turn !== 'you' || winner || (rolled !== null && !awaitingTabRoll)) return;
+    const faceValue = rollStickCount();
+    const isTab = faceValue === 0;
+    const previousTotal = awaitingTabRoll ? rolled ?? 0 : 0;
+    const total = previousTotal + (isTab ? 8 : faceValue);
+
+    setRolled(total);
+    setLastRoll({ value: faceValue, owner: 'you', isTab, total });
+    setSticks(freshSticks(faceValue));
+    setSelectedPiece(null);
+
+    if (isTab) {
+      triggerTabEffect();
+      setAwaitingTabRoll(true);
+      addHistory(`ターブが出ました。8として加算し、もう一度棒を振ります。現在の合計は${total}です。`);
+    } else {
+      playSound('roll');
+      if (!awaitingTabRoll) setMovedPieceIndices([]);
+      setAwaitingTabRoll(false);
+      addHistory(`${awaitingTabRoll ? `ターブを含めて合計${total}` : `${faceValue}`}マスです。駒ごとに分けて使えます。`);
+    }
+  };
+
+  const handleCellClick = (row: number, column: number) => {
+    if (turn !== 'you' || rolled === null || awaitingTabRoll || winner) return;
+    const clicked = [row, column] as Coord;
+
+    const selectedDestination = selectedDestinations.find(
+      (destination) => coordKey(destination.coord) === coordKey(clicked),
+    );
+    if (selectedPiece !== null && selectedDestination) {
+      performMove('you', selectedPiece, selectedDestination.amount);
+      return;
+    }
+
+    const candidate = pieces.you.findIndex(
+      (progress, index) => progress < 24
+        && !movedPieceIndices.includes(index)
+        && getPieceCoord('you', progress)
+        && coordKey(getPieceCoord('you', progress) as Coord) === coordKey(clicked)
+    );
+    if (candidate >= 0) {
+      setSelectedPiece(candidate);
+    }
+  };
+
+  const resetGame = () => {
+    cpuThinking.current = false;
+    setPieces({
+      you: [...initialPieces.you],
+      top: [...initialPieces.top],
+      right: [...initialPieces.right],
+      left: [...initialPieces.left],
+    });
+    setTurn('you');
+    setRolled(null);
+    setLastRoll(null);
+    setSticks([false, false, false, false]);
+    setSelectedPiece(null);
+    setMovedPieceIndices([]);
+    setAwaitingTabRoll(false);
+    setExtraTurnPending(false);
+    setTabEffect(false);
+    setCelebration(null);
+    setWinner(null);
+    setRanking(null);
+    setHistory(['盤面の準備ができました。棒を振ってください。']);
+    playSound('reset');
+  };
+
+  useEffect(() => {
+    if (!cpuPlayers.includes(turn) || winner || cpuThinking.current) return;
+    cpuThinking.current = true;
+    const timer = window.setTimeout(() => {
+      let faceValue = rollStickCount();
+      let total = faceValue === 0 ? 8 : faceValue;
+      let tabCount = faceValue === 0 ? 1 : 0;
+      while (faceValue === 0) {
+        faceValue = rollStickCount();
+        if (faceValue === 0) {
+          total += 8;
+          tabCount += 1;
+        } else {
+          total += faceValue;
+        }
+      }
+
+      const legalMoves = getLegalMoves(turn, total, pieces);
+      setSticks(freshSticks(faceValue));
+      setLastRoll({ value: faceValue, owner: turn, isTab: tabCount > 0, total });
+      if (tabCount > 0) {
+        triggerTabEffect();
+        addHistory(`${playerMeta[turn].name}にターブ。8として加算し、合計${total}マスで進みます。`);
+      } else {
+        playSound('roll');
+        addHistory(`${playerMeta[turn].name}に${total}が出ました。`);
+      }
+
+      if (legalMoves.length === 0) {
+        addHistory(`${playerMeta[turn].name}は進める駒がなく、手番をパスしました。`);
+        setRolled(null);
+        setTurn(nextTurn(turn));
+        cpuThinking.current = false;
+        return;
+      }
+
+      const ranked = legalMoves.map((pieceIndex) => {
+        const moveValue = Math.min(total, 24 - pieces[turn][pieceIndex]);
+        const currentProgress = pieces[turn][pieceIndex];
+        const targetProgress = currentProgress + moveValue;
+        const targetCoord = getPieceCoord(turn, targetProgress) ?? [2, 2] as Coord;
+        const captures = getCapturedPlayersAlongMove(turn, currentProgress, moveValue, pieces).length;
+        const reachesGoal = targetProgress === 24;
+        const leavesMadina = currentProgress === 0 && moveValue > 0;
+        const balanceBonus = currentProgress === Math.min(...pieces[turn].filter((progress) => progress < 24)) ? 120 : 0;
+        const score =
+          (reachesGoal ? 10000 : 0)
+          + captures * 5000
+          + (leavesMadina ? 1400 : 0)
+          + targetProgress * 30
+          + balanceBonus
+          - currentProgress * 4;
+        return { pieceIndex, moveValue, targetProgress, captures, score };
+      });
+
+      let selectedPieceIndex: number;
+      if (difficulty === 'weak') {
+        // 弱いCPUは出目を操作せず、合法な4駒からランダムに選ぶ。
+        selectedPieceIndex = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+      } else if (difficulty === 'normal') {
+        // 普通CPUは「ゴール・カット」を軽く優先しつつ、基本は前へ進める。
+        selectedPieceIndex = [...ranked].sort((a, b) => {
+          const aScore = (a.targetProgress === 24 ? 2500 : 0) + a.captures * 1000 + a.targetProgress;
+          const bScore = (b.targetProgress === 24 ? 2500 : 0) + b.captures * 1000 + b.targetProgress;
+          return bScore - aScore;
+        })[0].pieceIndex;
+      } else {
+        // 強いCPUは、出た目を変えずに「ゴール→カット→マディナから出す→前進→4駒の分散」の順で総合判断。
+        selectedPieceIndex = [...ranked].sort((a, b) => b.score - a.score)[0].pieceIndex;
+      }
+
+      performMove(turn, selectedPieceIndex, Math.min(total, 24 - pieces[turn][selectedPieceIndex]));
+      cpuThinking.current = false;
+    }, difficulty === 'strong' ? 650 : difficulty === 'normal' ? 800 : 1050);
+    return () => window.clearTimeout(timer);
+  }, [turn, winner, difficulty, pieces]);
+
+  const instruction = winner
+    ? `${playerMeta[winner].name}の勝利です。新しい対局を始められます。`
+    : turn !== 'you'
+      ? `${playerMeta[turn].name}が考えています…`
+      : awaitingTabRoll
+        ? `ターブです。もう一度棒を振って、合計${rolled}にします。`
+      : rolled === null
+        ? '棒を振って、あなたの手番を始めてください。'
+        : selectedPiece === null
+          ? '動かす駒をタップしてください。'
+          : mustUseAllRemaining
+            ? `残り${selectedMoveLimit}マスすべて進む移動先をタップしてください。`
+            : `黄色く光っている移動先をタップしてください（1〜${selectedMoveLimit}マス）。`;
+
+  return (
+    <main className="tab-app">
+      <header className="tab-topbar">
+        <div className="brand-lockup">
+          <div className="brand-mark" aria-hidden="true"><Sparkles size={24} /></div>
+          <div>
+            <div className="eyebrow">オマーン館 ・ 大阪・関西万博 2025</div>
+            <div className="brand-name">ターブ / 盤上ゲーム</div>
+          </div>
+        </div>
+        <div className="top-actions">
+          <button className="quiet-button" onClick={resetGame} data-testid="button-new-game-top">新しい対局</button>
+          <button
+            className="icon-button"
+            onClick={() => setSoundEnabled((current) => !current)}
+            aria-label={soundEnabled ? '効果音をオフにする' : '効果音をオンにする'}
+            aria-pressed={soundEnabled}
+            data-testid="button-toggle-sound"
+          >
+            {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          </button>
+          <button
+            className="icon-button"
+            onClick={() => {
+              setRulesOpen((current) => !current);
+              playSound('ui');
+            }}
+            aria-label="ルールを表示"
+            aria-expanded={rulesOpen}
+            data-testid="button-toggle-rules"
+          >
+            <CircleHelp size={18} />
+          </button>
+        </div>
+      </header>
+
+      <div className="game-wrap">
+        <section className="intro-row">
+          <div>
+            <h1 className="intro-title">駒を <em>ゴール</em> へ。</h1>
+          </div>
+          <p className="intro-copy">
+            4人で対戦し、あなた以外の3人はCPUです。マディナから外周を反時計回り、内周を時計回りに進み、4つの駒を最初にゴールさせましょう。
+          </p>
+        </section>
+
+        <section className="game-layout" aria-label="ターブの対戦盤">
+          <aside className="side-column left-column">
+            <section className="panel status-panel">
+              <div className="panel-label"><span>対局状況</span><Info size={13} /></div>
+              <h2 className="panel-heading">{winner ? `${playerMeta[winner].name}の勝利` : '4人対戦'}</h2>
+              <div className="turn-indicator" data-testid="status-turn">
+                <span className={`turn-dot ${turn !== 'you' ? `tone-${playerMeta[turn].color}` : 'you'}`} />
+                <span>{winner ? `${playerMeta[winner].name}が勝ちました` : `${playerMeta[turn].name}の手番`}</span>
+              </div>
+              <div className="players-list" data-testid="list-players">
+                {players.map((player) => (
+                  <div className={`player-row ${turn === player ? 'active' : ''}`} key={player} data-testid={`row-player-${player}`}>
+                    <span className={`mini-piece tone-${playerMeta[player].color} shape-${playerMeta[player].shape}`} aria-hidden="true" />
+                    <span className="player-row-name">{playerMeta[player].name}</span>
+                    <strong data-testid={`text-remaining-${player}`}>{countOnBoard(pieces[player])}</strong>
+                  </div>
+                ))}
+              </div>
+              <div className="status-caption">盤上に残っている駒 / 全4個</div>
+            </section>
+
+            <section className="panel action-panel">
+              <button
+                className="primary-button"
+                onClick={handleRoll}
+                disabled={turn !== 'you' || Boolean(winner) || (rolled !== null && !awaitingTabRoll)}
+                data-testid="button-roll"
+              >
+                {awaitingTabRoll ? 'もう一度振る' : '棒を振る'} <ArrowRight size={16} />
+              </button>
+              {turn === 'you' && rolled !== null && !awaitingTabRoll && !winner && (
+                <div className="move-controls" data-testid="move-controls">
+                  <div className="move-controls-label">残り <strong>{rolled}</strong> マスを分けて使う</div>
+                  <div className="piece-options" aria-label="動かす駒を選択">
+                    {pieces.you.map((progress, index) => (
+                      <button
+                        key={`piece-option-${index}`}
+                        className={`piece-option ${selectedPiece === index ? 'active' : ''}`}
+                        disabled={progress >= 24 || movedPieceIndices.includes(index)}
+                        onClick={() => {
+                          setSelectedPiece(index);
+                          playSound('select');
+                        }}
+                        data-testid={`button-piece-option-${index}`}
+                      >
+                        <span>駒{index + 1}</span>
+                        <small>{progress === 0 ? 'マディナ' : progress === 24 ? 'ゴール' : `${progress}マス`}</small>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="move-controls-note">駒をタップしたあと、盤面で進めたいマスをタップしてください。</div>
+                </div>
+              )}
+              <div className="difficulty-wrap">
+                <label className="difficulty-label" htmlFor="difficulty">CPUの強さ</label>
+                <select id="difficulty" className="difficulty-select" value={difficulty} onChange={(event) => setDifficulty(event.target.value as Difficulty)} data-testid="select-difficulty">
+                  <option value="weak">弱い</option>
+                  <option value="normal">普通</option>
+                  <option value="strong">強い</option>
+                </select>
+              </div>
+              {winner && (
+                <div className="winner-banner" data-testid="status-winner">
+                  {playerMeta[winner].name}の勝利
+                  <small>4つの駒をすべてゴール</small>
+                </div>
+              )}
+            </section>
+          </aside>
+
+          <section className="board-column">
+            <div className="board-header">
+              <span className="board-meta">4人対戦 ・ 4個の駒 ・ 中央がゴール</span>
+              <span className="board-instruction" data-testid="text-instruction">{instruction}</span>
+            </div>
+            <div className="board-frame" data-testid="board-game">
+              <div className="board-grid">
+                {Array.from({ length: 25 }, (_, cell) => {
+                  const row = Math.floor(cell / 5);
+                  const column = cell % 5;
+                  const key = `${row}-${column}`;
+                  const pathIndex = routeIndex.get(key);
+                   const perspectiveLabel = playerRouteLabels.get(key);
+                  const isCenter = row === 2 && column === 2;
+                  const homePlayer = players.find(
+                    (player) => coordKey(routeFor(player)[0]) === key,
+                  );
+                   const cellLabel = homePlayer === 'you' ? 'M' : perspectiveLabel ?? '';
+                  const target = selectedDestinations.some(
+                    (destination) => coordKey(destination.coord) === key,
+                  );
+                  const piecesAtCell = players.flatMap((player) =>
+                    pieces[player].map((progress, pieceIndex) => ({
+                      player,
+                      pieceIndex,
+                      progress,
+                      coord: getPieceCoord(player, progress),
+                    })).filter((piece) => piece.coord && coordKey(piece.coord) === key),
+                  );
+
+                  if (isCenter) {
+                    return (
+                      <button
+                        className={`center-start ${target ? 'destination' : ''}`}
+                        key="center-goal"
+                        onClick={() => handleCellClick(row, column)}
+                        aria-label="中央のゴール"
+                        data-testid="cell-center-goal"
+                      >
+                        <div className="center-copy">ゴール<small>4個をここへ</small></div>
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={`route-cell-${key}`}
+                      className={`board-cell ${pathIndex !== undefined && pathIndex >= 16 ? 'inner-route' : ''} ${homePlayer ? `home-zone ${homePlayer}` : ''} ${target ? 'destination' : ''}`}
+                      onClick={() => handleCellClick(row, column)}
+                       aria-label={`${homePlayer ? `${playerMeta[homePlayer].name}のマディナ` : `あなた視点のマス ${perspectiveLabel ?? ''}`}${target ? '、移動先' : ''}`}
+                      data-testid={`cell-route-${key}`}
+                    >
+                       <span className="route-number">{cellLabel}</span>
+                      <span className="route-arrow" aria-hidden="true">{getDirection(row, column)}</span>
+                      {homePlayer && <span className="home-label">マディナ</span>}
+                       {piecesAtCell.map((piece, pieceStackIndex) => {
+                         const [offsetX, offsetY] = stackOffset(pieceStackIndex, piecesAtCell.length);
+                         return (
+                        <span
+                          key={`${piece.player}-${piece.pieceIndex}`}
+                          className={`board-piece tone-${playerMeta[piece.player].color} shape-${playerMeta[piece.player].shape} ${piece.player === 'you' && selectedPiece === piece.pieceIndex ? 'selected' : ''}`}
+                           style={{ left: `calc(50% + ${offsetX}px)`, top: `calc(50% + ${offsetY}px)` }}
+                          title={`${playerMeta[piece.player].name}の駒`}
+                          aria-label={`${playerMeta[piece.player].name}の駒${piece.pieceIndex + 1}`}
+                          data-testid={`piece-${piece.player}-${piece.pieceIndex}`}
+                        />
+                         );
+                       })}
+                    </button>
+                  );
+                })}
+              </div>
+               {celebration && (
+                 <div
+                   className={`board-event board-event-${celebration.type}`}
+                   key={celebration.id}
+                   role="status"
+                   aria-live="assertive"
+                 >
+                   {celebration.type === 'goal' ? <Trophy size={24} /> : <Zap size={24} />}
+                   <strong>{celebration.type === 'goal' ? 'ゴール！' : 'カット！'}</strong>
+                   <span>{celebration.type === 'goal' ? '駒が中央に到着' : '相手の駒をマディナへ'}</span>
+                 </div>
+               )}
+                {winner && ranking && (
+                  <div className="winner-overlay" data-testid="winner-overlay" role="dialog" aria-label="結果発表">
+                    <div className="winner-overlay-content">
+                      <Trophy className="winner-trophy" size={30} />
+                      <span className="winner-kicker">FINAL RESULT</span>
+                      <h2>結果発表</h2>
+                      <strong className="winner-name">{playerMeta[winner].name}の勝利！</strong>
+                      <div className="ranking-list" aria-label="ゴール数による順位">
+                        {ranking.map((entry) => (
+                          <div className="ranking-row" key={entry.player}>
+                            <strong className="ranking-rank">{entry.rank}位</strong>
+                            <span>{playerMeta[entry.player].name}</span>
+                            <small>{entry.goals}個ゴール</small>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        className="primary-button replay-button"
+                        onClick={resetGame}
+                        data-testid="button-play-again"
+                      >
+                        もう一度遊ぶ
+                      </button>
+                    </div>
+                  </div>
+                )}
+            </div>
+            <div className="board-legend" data-testid="board-legend">
+              {players.map((player) => (
+                <span className="legend-item" key={player}>
+                  <span className={`legend-piece tone-${playerMeta[player].color} shape-${playerMeta[player].shape}`} />
+                  {playerMeta[player].name}
+                </span>
+              ))}
+              <span className="legend-item">→ 外周は反時計回り / 内周は時計回り</span>
+            </div>
+          </section>
+
+           <aside className="side-column right-column">
+             <section className={`panel sticks-panel ${tabEffect ? 'tab-burst' : ''}`} aria-live="polite">
+               {tabEffect && <div className="tab-burst-label">ターブ！ <span>＋8</span></div>}
+               <div className="panel-label"><span>今回の出目</span><span>{lastRoll ? playerMeta[lastRoll.owner].shortName : '待機中'}</span></div>
+                <h2 className="panel-heading">出目を確認</h2>
+                <div className="roll-spotlight" aria-live="polite">
+                  <span className="roll-spotlight-label">{lastRoll?.isTab ? 'ターブを含む合計' : '合計マス'}</span>
+                  <strong>{lastRoll ? lastRoll.total : '—'}</strong>
+                  <span className="roll-spotlight-unit">{lastRoll ? 'マス進めます' : '棒を振ると表示'}</span>
+                </div>
+                <div className="sticks-label">棒の向き</div>
+               <div className="sticks" data-testid="display-sticks" aria-label={lastRoll ? (lastRoll.isTab ? `ターブ、合計${lastRoll.total}` : `出目は${lastRoll.value}`) : 'まだ棒を振っていません'}>
+                 {sticks.map((isDark, index) => (
+                   <span key={`stick-${index}`} className={`stick ${isDark ? 'dark' : ''}`} aria-label={isDark ? '表' : '裏'} />
+                 ))}
+               </div>
+               <div className="stick-key"><span>表 = 1</span><span>全て裏 = ターブ（8）</span></div>
+               <div className="roll-result" data-testid="display-roll">
+                 {lastRoll ? (
+                   <>
+                     <strong>{lastRoll.isTab ? 'ターブ' : lastRoll.value}</strong>
+                     <span>{playerMeta[lastRoll.owner].name}の出目</span>
+                     {lastRoll.isTab && <small>8として加算 ・ 合計 {lastRoll.total}</small>}
+                   </>
+                 ) : 'まだ振っていません'}
+               </div>
+             </section>
+
+            <section className="panel history-panel">
+              <div className="panel-label"><span>対局履歴</span><span>{history.length}</span></div>
+              <ol className="history-list" data-testid="list-move-history">
+                {history.map((entry, index) => (
+                  <li key={`${entry}-${index}`}>
+                    <span className="history-index">{String(history.length - index).padStart(2, '0')}</span>
+                    <span data-testid={`text-history-${index}`}>{entry}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            {rulesOpen ? (
+              <section className="panel rules-panel" data-testid="panel-rules">
+                <div className="panel-label"><span>遊び方</span><CircleHelp size={13} /></div>
+                <h2 className="panel-heading">ターブのルール</h2>
+                <p className="rules-copy">
+                  4人で遊び、あなた以外の3人はCPUです。各プレイヤーは4個の駒を自分のマディナから始めます。手番では4本の棒を振り、表の数だけ進みます。
+                </p>
+                <p className="rules-copy">
+                  4本すべて裏ならターブです。ターブは8として扱い、もう一度振って出た数と合計してから進みます。ターブが続いた場合も同じです。
+                </p>
+                <p className="rules-copy">
+                  外周は反時計回り、内周は時計回りです。出た目は複数の駒へ自由に分けられます。自分の駒が同じマスに入っても合体せず、それぞれ別の駒として進みます。
+                </p>
+                <p className="rules-copy">
+                  相手の駒を追い越すとカットし、相手のマディナへ戻します。マディナは安全地帯で、カットされず、誰でも入れます。カットまたはゴールで連続手番です。
+                </p>
+                <p className="rules-note">万博のオマーンパビリオンで見た盤面とルール画像をもとにしたデジタル解釈版です。</p>
+              </section>
+            ) : (
+              <button className="quiet-button rules-trigger" onClick={() => setRulesOpen(true)} data-testid="button-open-rules">ルールと遊び方を見る</button>
+            )}
+             <button className="quiet-button reset-button" onClick={resetGame} data-testid="button-reset-game">
+               ゲームをリセット
+             </button>
+          </aside>
+        </section>
+        <footer className="footer-note"><span>4人で遊ぶターブ</span><span>オマーン ・ 大阪 ・ 2025</span></footer>
+      </div>
+    </main>
+  );
+}
+
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
+
+</script>
+</body>
+</html>
