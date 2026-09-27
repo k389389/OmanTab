@@ -324,22 +324,25 @@
             background: #f0ebe4;
         }
 
-        /* ボタン画面の下を上方向へ流れるチャット */
+        /* ボタン画面の下から、ミャクのボタンに重なって上へ流れるチャット */
         .floating-chat-area {
-            width: 100%;
-            min-height: 0;
-            height: 0;
-            position: relative;
+            position: fixed;
+            left: 50%;
+            bottom: 105px;
+            width: min(92vw, 520px);
+            height: 75vh;
+            transform: translateX(-50%);
             overflow: visible;
-            margin-top: -2px;
+            margin: 0;
             pointer-events: none;
+            z-index: 10000;
         }
 
         .floating-chat-message {
             position: absolute;
             left: 50%;
-            bottom: 2px;
-            transform: translate(-50%, 0);
+            bottom: 0;
+            transform: translate(-50%, 18px);
             width: auto;
             max-width: 92%;
             padding: 7px 13px;
@@ -356,8 +359,8 @@
             word-break: break-word;
             text-overflow: clip;
             opacity: 0;
-            animation: chatFloatUp 3.8s ease-out forwards;
-            z-index: 20;
+            animation: chatFloatUp 4.8s ease-out forwards;
+            z-index: 10001;
         }
 
         @keyframes chatFloatUp {
@@ -365,16 +368,16 @@
                 transform: translate(-50%, 18px);
                 opacity: 0;
             }
-            12% {
+            10% {
                 transform: translate(-50%, 0);
                 opacity: 1;
             }
-            68% {
-                transform: translate(-50%, -380px);
+            75% {
+                transform: translate(-50%, -68vh);
                 opacity: 0.95;
             }
             100% {
-                transform: translate(-50%, -520px);
+                transform: translate(-50%, -75vh);
                 opacity: 0;
             }
         }
