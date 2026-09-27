@@ -1,377 +1,2854 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>ターブ — Oman Board Game</title>
-<style>
-:root{--sand:#ead5a8;--sand2:#f6e9c9;--brown:#4d2f20;--red:#c84a32;--gold:#d79d3f;--green:#38745a;--shadow:0 12px 30px #4a2d201c}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:radial-gradient(circle at 30% 10%,#fff8e7,#d9c08f 85%);color:var(--brown);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;touch-action:manipulation}
-body{min-height:100vh}
-button{font:inherit}
-.wrap{max-width:900px;margin:auto;padding:16px}
-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
-.logo{font-weight:900;letter-spacing:.08em;font-size:clamp(20px,5vw,34px)}
-.sub{font-size:12px;opacity:.7}
-.card{background:#fff8e7d9;border:2px solid #6d4630;border-radius:18px;box-shadow:var(--shadow);backdrop-filter:blur(5px)}
-#game{display:none}
-.board-card{padding:12px}
-.board{position:relative;aspect-ratio:1/1;border:7px solid #6b432b;border-radius:8px;background:#d9bb83;box-shadow:inset 0 0 0 3px #b28550;overflow:hidden}
-.grid{position:absolute;inset:2%;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr)}
-.cell{border:1px solid #8c6544;position:relative;background:linear-gradient(135deg,#f0d8a5,#e7ca94)}
-.cell span{position:absolute;top:4px;left:5px;font-size:10px;opacity:.72}
-.cell.home{background:#efb7a9}
-.cell.goal{background:linear-gradient(145deg,#285e52,#1d4b43);color:white;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;text-align:center}
-.piece{position:absolute;width:30%;aspect-ratio:1;border-radius:50%;border:2px solid #fff8e7;box-shadow:0 3px 7px #2b1b132c;transform:translate(-50%,-50%);z-index:4;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:11px;transition:left .35s ease,top .35s ease,transform .2s}
-.piece.you{background:#e8a9a0}.piece.cpu1{background:#54a9a0}.piece.cpu2{background:#6a9d65}.piece.cpu3{background:#e0a35a}
-.piece.active{box-shadow:0 0 0 5px #ffe28a,0 0 20px #ffbc38;transform:translate(-50%,-50%) scale(1.1)}
-.cell.home .piece{width:24%;box-shadow:0 2px 4px #2b1b1340}
-.legend{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-size:12px;padding:8px}
-.dot{display:inline-block;width:13px;height:13px;border-radius:50%;vertical-align:-2px;border:1px solid white}
-.main{display:grid;grid-template-columns:1.3fr .9fr;gap:12px;margin-top:12px}
-.panel{padding:14px}
-.turn{font-weight:900;font-size:20px}
-.status{margin-top:6px;min-height:28px}
-.sticks{display:flex;justify-content:center;gap:8px;margin:14px 0;min-height:85px;align-items:center}
-.stick{width:34px;height:78px;border-radius:7px;background:linear-gradient(90deg,#f8e5ba,#d3ae6d);border:2px solid #7c5435;position:relative;box-shadow:0 5px 9px #4d2f2022;transform:rotate(7deg);transition:.2s}
-.stick:after{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:#bd5037;left:50%;top:24%;transform:translateX(-50%);box-shadow:0 34px #bd5037}
-.stick.back{transform:rotate(-7deg);background:linear-gradient(90deg,#d6b171,#f6e1ae)}
-.stick.back:after{background:#6f4932;box-shadow:none;width:17px;height:17px;top:38%}
-.resultBox{font-size:26px;font-weight:1000;text-align:center;border:2px solid #8b6242;border-radius:12px;padding:8px;background:#f7e8c4}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.btn{border:0;border-radius:12px;padding:13px 12px;font-weight:900;cursor:pointer;box-shadow:0 5px 0 #7b3c2e;background:var(--red);color:#fff}
-.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #7b3c2e}
-.btn.alt{background:#e0bd79;color:var(--brown);box-shadow:0 5px 0 #a77d45}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.log{margin-top:12px;max-height:170px;overflow:auto;font-size:12px;line-height:1.6}
-.log div{padding:3px 0;border-bottom:1px dashed #b58d62}
-.help{font-size:12px;line-height:1.65;opacity:.8;margin-top:10px}
-#start{min-height:100vh;display:grid;place-items:center}
-.start-card{max-width:650px;padding:28px;text-align:center}
-.start-card h1{font-size:clamp(34px,9vw,62px);margin:0 0 4px}
-.start-card h1 span{color:var(--red)}
-.start-card p{line-height:1.8}
-.rules{display:grid;grid-template-columns:1fr 1fr;text-align:left;gap:8px;margin:20px 0}
-.rule{padding:10px;border-radius:10px;background:#ead4a6}
-.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#24150dcc;z-index:30}
-.overlay.show{display:flex}
-.pop{background:#fff3cf;border:4px solid #d39b44;border-radius:22px;padding:25px;text-align:center;box-shadow:0 20px 80px #0008;animation:pop .45s ease}
-.pop h2{font-size:clamp(34px,10vw,70px);margin:0}
-.pop p{margin:8px 0 0;font-weight:900}
-#toast{position:fixed;left:50%;top:14%;transform:translateX(-50%) scale(.7);opacity:0;z-index:40;background:#fff3c5;border:3px solid #d39b44;padding:13px 25px;border-radius:999px;font-size:clamp(24px,7vw,48px);font-weight:1000;white-space:nowrap;pointer-events:none}
-#toast.show{animation:toast .9s ease}
-.confetti{position:fixed;width:10px;height:18px;z-index:50;animation:fall 1.2s ease-out forwards}
-@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
-@keyframes toast{0%{opacity:0;transform:translateX(-50%) scale(.5)}20%,75%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) scale(1.15)}}
-@keyframes fall{to{transform:translateY(90vh) rotate(700deg);opacity:0}}
-@media(max-width:700px){.wrap{padding:8px}.main{grid-template-columns:1fr}.panel{padding:11px}.rules{grid-template-columns:1fr}.piece{width:25%}.cell span{font-size:8px}}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ミャクニョッキ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            touch-action: manipulation;
+            background-color: #f4f0eb;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 12px;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 20px;
+        }
+
+        /* ユーザー情報・参加人数エリア */
+        .status-card {
+            background: #fff;
+            padding: 14px 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .status-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            background: #ffeeba;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* タイマー表示エリア */
+        .timer-display {
+            background: #faf8f5;
+            border: 1px solid #e0dbd1;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #b83d53;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .participants {
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* カウント＆スコア表示カード */
+        .score-card {
+            background: #fff;
+            padding: 14px 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .score-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .score-box .label {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .score-box .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #b83d53;
+        }
+
+        /* 常時表示ランキングカード */
+        .live-ranking-card {
+            background: #fff;
+            padding: 12px 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .live-ranking-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .live-ranking-items {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .live-ranking-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            padding: 4px 8px;
+            background: #faf8f5;
+            border-radius: 8px;
+        }
+        .current-rule-card { background:#fff; padding:12px 16px; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+        .current-rule-title { font-size:13px; font-weight:900; color:#555; margin-bottom:7px; }
+        .current-rule-items { font-size:13px; line-height:1.7; color:#444; }
+        .current-rule-item { white-space:nowrap; }
+
+        /* チャット欄・リアクション */
+        .chat-section {
+            background: #fff;
+            padding: 12px 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            min-width: 0;
+            min-height: 36px;
+            height: 36px;
+            max-height: none;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 18px;
+            outline: none;
+            font-size: 16px;
+            line-height: 1.35;
+            background: #faf8f5;
+            -webkit-appearance: none;
+            resize: none;
+            overflow: hidden;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            touch-action: manipulation;
+        }
+
+        .chat-submit {
+            background: #e6dfd5;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* キノコタイム表示 */
+        .mushroom-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(60, 40, 20, 0.72);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            padding: 20px;
+            pointer-events: none;
+        }
+        .mushroom-overlay.active { display: flex; }
+        .mushroom-card {
+            width: 100%;
+            max-width: 360px;
+            background: #fff;
+            border-radius: 24px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            animation: mushroomPop 0.25s ease-out;
+        }
+        @keyframes mushroomPop {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .mushroom-title { margin: 0; font-size: 30px; font-weight: 900; color: #b83d53; }
+        .mushroom-countdown { margin: 6px 0 12px; font-size: 22px; font-weight: bold; color: #666; }
+        .mushroom-count { margin: 0 0 14px; font-size: 15px; color: #555; }
+        .mushroom-reaction-btn {
+            width: 150px; height: 100px; border: 2px solid #e0dbd1; border-radius: 20px;
+            background: #faf8f5; font-size: 52px; cursor: pointer;
+            -webkit-tap-highlight-color: transparent; transition: transform 0.06s ease;
+            pointer-events: auto;
+        }
+        .mushroom-reaction-btn:active { transform: scale(0.88); }
+
+        /* キノコタイム終了時の上位3人表示 */
+        .mushroom-result-overlay {
+            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+            z-index: 11000; background: rgba(45, 30, 18, 0.76); padding: 16px;
+        }
+        .mushroom-result-overlay.active { display: flex; }
+        .mushroom-result-card {
+            width: 100%; max-width: 360px; background: #fff; border-radius: 24px;
+            padding: 22px 18px; text-align: center; box-shadow: 0 12px 35px rgba(0,0,0,.28);
+            animation: mushroomResultPop .28s ease-out;
+        }
+        .mushroom-result-title { margin: 0 0 14px; font-size: 25px; font-weight: 900; color: #b83d53; }
+        .mushroom-result-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            padding: 10px 12px; margin: 7px 0; border-radius: 12px; background: #faf8f5; font-weight: 800;
+        }
+        .mushroom-result-rank { min-width: 34px; font-size: 20px; }
+        .mushroom-result-name { flex: 1; text-align: left; overflow-wrap: anywhere; word-break: break-word; }
+        .mushroom-result-count { color: #b83d53; white-space: nowrap; }
+        .mushroom-result-note { margin: 12px 0 0; font-size: 12px; color: #777; }
+        @keyframes mushroomResultPop { from { transform: scale(.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* リアクションボタンエリア */
+        .reaction-bar {
+            display: flex;
+            justify-content: space-between;
+            gap: 4px;
+            padding: 8px;
+            position: relative;
+            width: 100%;
+            background: #fff;
+            border: 1px solid #e0dbd1;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            z-index: 20;
+            pointer-events: auto;
+            transition: none;
+        }
+        /* キノコタイム中だけ、通常位置から画面下部へ浮き上がる */
+        .reaction-bar.mushroom-active {
+            position: fixed;
+            left: 50%;
+            bottom: 86px;
+            transform: translateX(-50%);
+            width: min(390px, calc(100vw - 24px));
+            z-index: 10010;
+            animation: reactionBarFloatUp 0.28s ease-out forwards;
+        }
+        @keyframes reactionBarFloatUp {
+            from { transform: translateX(-50%) translateY(70px); opacity: 0.25; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            .reaction-bar.mushroom-active {
+                bottom: calc(92px + env(safe-area-inset-bottom));
+            }
+        }
+
+        .reaction-btn {
+            background: #faf8f5;
+            border: 1px solid #e0dbd1;
+            border-radius: 12px;
+            font-size: 18px;
+            padding: 6px 0;
+            flex: 1;
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.1s, background 0.1s;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .reaction-btn:active {
+            transform: scale(0.9);
+            background: #f0ebe4;
+        }
+
+        /* ボタン画面の下を上方向へ流れるチャット */
+        .floating-chat-area {
+            width: 100%;
+            min-height: 0;
+            height: 0;
+            position: relative;
+            overflow: visible;
+            margin-top: -2px;
+            pointer-events: none;
+        }
+
+        .floating-chat-message {
+            position: absolute;
+            left: 50%;
+            bottom: 2px;
+            transform: translate(-50%, 0);
+            width: auto;
+            max-width: 92%;
+            padding: 7px 13px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.96);
+            border: 1px solid #e0dbd1;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+            color: #444;
+            font-size: 13px;
+            line-height: 1.25;
+            white-space: normal;
+            overflow: visible;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            text-overflow: clip;
+            opacity: 0;
+            animation: chatFloatUp 3.8s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes chatFloatUp {
+            0% {
+                transform: translate(-50%, 18px);
+                opacity: 0;
+            }
+            12% {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+            68% {
+                transform: translate(-50%, -175px);
+                opacity: 0.95;
+            }
+            100% {
+                transform: translate(-50%, -255px);
+                opacity: 0;
+            }
+        }
+        .mushroom-reaction-fx-layer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 100000;
+            overflow: hidden;
+        }
+
+        .mushroom-reaction-fx {
+            position: absolute;
+            left: 50%;
+            bottom: 18px;
+            line-height: 1;
+            pointer-events: none;
+            will-change: transform, opacity;
+            animation: mushroomReactionOverflow 1.45s ease-out forwards;
+            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.18));
+        }
+
+        @keyframes mushroomReactionOverflow {
+            0% {
+                transform: translate(-50%, 0) scale(0.55) rotate(0deg);
+                opacity: 0;
+            }
+            12% { opacity: 1; }
+            55% { opacity: 1; }
+            100% {
+                transform: translate(calc(-50% + var(--drift)), var(--rise))
+                           scale(1.25) rotate(var(--rotate));
+                opacity: 0;
+            }
+        }
+
+        /* チャットのログ */
+        .chat-messages {
+            height: 90px;
+            overflow-y: auto;
+            font-size: 13px;
+            color: #555;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-top: 4px;
+            border-top: 1px solid #eee;
+            scroll-behavior: smooth;
+        }
+
+        /* メインのゲーム画面 */
+        .game-card {
+            background: #fff;
+            padding: 20px 16px 0;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .game-main-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            width: 100%;
+        }
+
+        /* ミャクミャク画像カード */
+        .myaku-img-card {
+            width: 75px;
+            height: 105px;
+            background: #faf8f5;
+            border: 1px solid #e0dbd1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            overflow: hidden;
+            transition: transform 0.1s ease;
+        }
+
+        .myaku-img-card img {
+            width: 85%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        /* 失敗時のエフェクト（画面揺れ＆赤フラッシュ） */
+        @keyframes errorShake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-6px, 2px) rotate(-3deg); }
+            40% { transform: translate(6px, -2px) rotate(3deg); }
+            60% { transform: translate(-4px, 1px) rotate(-2deg); }
+            80% { transform: translate(4px, -1px) rotate(2deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .shake-effect {
+            animation: errorShake 0.4s ease;
+            border-color: #b83d53 !important;
+            background-color: #fde8e8 !important;
+        }
+
+        /* アウトー！ポップアップエフェクト */
+        @keyframes outPop {
+            0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+            70% { transform: scale(0.95) rotate(-3deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 0; }
+        }
+
+        .out-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: transparent;
+            color: #0066ff;
+            font-size: 24px;
+            font-weight: 900;
+            padding: 0;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            z-index: 100;
+            pointer-events: none;
+            animation: outPop 0.8s ease forwards;
+            letter-spacing: 1px;
+            white-space: pre-line;
+            text-align: center;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 3D立体風ボタン */
+        .nyokki-btn {
+            width: 180px;
+            height: 180px;
+            background-color: #b83d53;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 12px 0 #8c2a3c, 0 16px 20px rgba(0,0,0,0.15);
+            transition: transform 0.08s ease, box-shadow 0.08s ease;
+            margin: 10px 0;
+        }
+
+        .nyokki-btn::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            right: 3px;
+            bottom: 3px;
+            background: linear-gradient(135deg, #d35269 0%, #b83d53 60%, #9e3044 100%);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .nyokki-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .nyokki-btn h2 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+
+        .nyokki-btn .sub-en {
+            margin: 2px 0 6px 0;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #ffffff;
+            opacity: 0.95;
+        }
+
+        .nyokki-btn p {
+            margin: 0;
+            font-size: 11px;
+            color: #ffffff;
+            opacity: 0.9;
+        }
+
+
+        .myaku-count-effect {
+            position: absolute;
+            left: 50%;
+            top: -42px;
+            transform: translate(-50%, 8px) scale(0.85);
+            color: #b83d53;
+            font-size: 24px;
+            font-weight: 900;
+            white-space: nowrap;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.12);
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0;
+            animation: myakuCountPop 0.9s ease-out forwards;
+        }
+
+        @keyframes myakuCountPop {
+            0% { transform: translate(-50%, 10px) scale(0.8); opacity: 0; }
+            18% { transform: translate(-50%, 0) scale(1.08); opacity: 1; }
+            55% { transform: translate(-50%, -8px) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -34px) scale(0.96); opacity: 0; }
+        }
+
+        .nyokki-btn.is-pressed,
+        .nyokki-btn:active {
+            transform: translateY(8px);
+            box-shadow: 0 4px 0 #8c2a3c, 0 6px 10px rgba(0,0,0,0.15);
+        }
+
+        .game-desc {
+            font-size: 15px;
+            font-weight: normal;
+            color: #666;
+            line-height: 1.6;
+            margin: 0;
+            margin-bottom: -12px;
+        }
+
+        /* 一番下のルール変更ボタンエリア */
+        .rule-footer {
+            margin-top: 4px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .rule-btn {
+            width: 100%;
+            background: #fff;
+            border: 1px solid #dcd6ce;
+            padding: 12px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .rule-btn:active {
+            background: #f0ebe4;
+        }
+
+        /* 表彰画面モーダル */
+        .result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 16px;
+        }
+
+        .result-overlay.active {
+            display: flex;
+        }
+
+        .result-card {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, #fff 0%, #fffaf4 100%);
+            width: 100%;
+            max-width: 360px;
+            border-radius: 24px;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .result-card::before {
+            content: "";
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            left: 50%;
+            top: -145px;
+            transform: translateX(-50%);
+            background: radial-gradient(circle, rgba(255,214,71,.42) 0%, rgba(255,214,71,0) 70%);
+            animation: resultGlow 1.8s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        @keyframes resultGlow { from { opacity:.55; transform:translateX(-50%) scale(.9); } to { opacity:1; transform:translateX(-50%) scale(1.15); } }
+        .result-title, .result-subtitle, .ranking-list, .restart-btn { position: relative; z-index: 2; }
+        .result-title { animation: resultTitleBounce .75s cubic-bezier(.2,.8,.2,1) both; }
+        @keyframes resultTitleBounce { 0%{transform:scale(.55) rotate(-5deg);opacity:0} 65%{transform:scale(1.12) rotate(2deg);opacity:1} 100%{transform:scale(1) rotate(0)} }
+        .result-spark {
+            position:absolute; z-index:1; pointer-events:none; font-size:24px;
+            animation: sparkBurst 1.4s ease-out forwards;
+        }
+        @keyframes sparkBurst {
+            0%{transform:translate(0,20px) scale(.3) rotate(0);opacity:0}
+            20%{opacity:1}
+            100%{transform:translate(var(--dx),var(--dy)) scale(1.15) rotate(var(--rot));opacity:0}
+        }
+        .result-confetti {
+            position:absolute; z-index:1; top:-18px; width:9px; height:15px; border-radius:2px;
+            animation: confettiFall var(--dur) linear forwards;
+            transform: rotate(var(--rot)); pointer-events:none;
+        }
+        @keyframes confettiFall {
+            0%{transform:translateY(0) rotate(var(--rot));opacity:0}
+            8%{opacity:1}
+            100%{transform:translate(var(--drift),430px) rotate(calc(var(--rot) + 540deg));opacity:0}
+        }
+        .result-card.celebrate { animation: popIn .3s ease-out, resultCardPulse 1.1s .25s ease-in-out 2; }
+        @keyframes resultCardPulse { 0%,100%{box-shadow:0 10px 25px rgba(0,0,0,.2),0 0 0 rgba(255,214,71,0)} 50%{box-shadow:0 10px 35px rgba(0,0,0,.24),0 0 35px rgba(255,214,71,.5)} }
+
+        .result-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #b83d53;
+            margin: 0;
+        }
+
+        .result-subtitle {
+            font-size: 13px;
+            color: #666;
+            margin: -8px 0 4px 0;
+        }
+
+        .ranking-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: #faf8f5;
+            border-radius: 12px;
+            border: 1px solid #e8e3dc;
+            font-size: 14px;
+        }
+
+        .ranking-item.top-1 {
+            background: #fff9e6;
+            border-color: #ffe066;
+            font-weight: bold;
+        }
+
+        .ranking-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-badge {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .top-1 .rank-badge { background: #ffd43b; color: #fff; }
+        .top-2 .rank-badge { background: #ced4da; color: #fff; }
+        .top-3 .rank-badge { background: #e8590c; color: #fff; }
+
+        .restart-btn {
+            width: 100%;
+            background: #b83d53;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        /* ルール設定モーダル */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            width: 100%;
+            max-width: 400px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .rule-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .rule-item label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .rule-item select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 14px;
+            background: #faf8f5;
+            outline: none;
+        }
+
+        .save-rule-btn {
+            background: #b83d53;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* 上位3人の下に表示するチャットログ欄 */
+        .ranking-chat-log {
+            width: 100%;
+            margin-top: 0;
+            background: #fff;
+            padding: 12px 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .ranking-chat-log-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        #rankingChatMessages {
+            height: 90px;
+            overflow-y: auto;
+            font-size: 13px;
+            color: #555;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-top: 4px;
+            border-top: 1px solid #eee;
+            scroll-behavior: smooth;
+        }
+        .ranking-chat-message {
+            padding: 3px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .participant-list-card {
+            width: 100%;
+            margin-top: 10px;
+            background: #fff;
+            padding: 12px 16px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .participant-list-title { font-size: 12px; font-weight: 800; color: #666; margin-bottom: 8px; }
+        .participant-list { display: flex; flex-direction: column; gap: 6px; }
+        .participant-row { display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:10px; background:#faf8f5; font-size:14px; }
+        .participant-name { flex:1; overflow-wrap:anywhere; word-break:break-word; font-weight:700; }
+        .participant-score { color:#b83d53; font-weight:800; white-space:nowrap; }
+        .participant-status { font-size:12px; color:#888; white-space:nowrap; }
+        .participant-row.disqualified { opacity:.55; }
+    
+        .start-countdown-overlay{display:none;position:fixed;inset:0;z-index:12000;background:rgba(30,24,20,.72);align-items:center;justify-content:center}
+        .start-countdown-overlay.active{display:flex}
+        .start-countdown-card{text-align:center;color:#fff}
+        .start-countdown-number{font-size:clamp(72px,22vw,150px);font-weight:900;line-height:1;animation:startCountPop .7s ease-out;text-shadow:0 8px 30px rgba(0,0,0,.35)}
+        .start-countdown-number.start-label{font-size:clamp(58px,18vw,120px);white-space:nowrap}
+        .start-countdown-text{margin-top:18px;font-size:clamp(20px,5vw,34px);font-weight:800}
+        .rule-confirm-overlay{display:none;position:fixed;inset:0;z-index:11900;background:rgba(30,24,20,.78);align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
+        .rule-confirm-overlay.active{display:flex}
+        .rule-confirm-card{width:min(92vw,480px);background:#fff;border-radius:24px;padding:24px 22px 22px;box-sizing:border-box;text-align:left;box-shadow:0 12px 40px rgba(0,0,0,.35);border:4px solid #b83d53}
+        .rule-confirm-title{text-align:center;margin:0 0 18px;font-size:clamp(24px,6vw,32px);font-weight:900;color:#b83d53}
+        .rule-confirm-list{margin:0 0 20px;padding:0;list-style:none}
+        .rule-confirm-list li{font-size:clamp(17px,4.5vw,21px);font-weight:800;line-height:1.55;padding:7px 4px;border-bottom:1px solid #eee}
+        .rule-confirm-list li:last-child{border-bottom:none}
+        .rule-confirm-start{display:block;width:100%;border:0;border-radius:14px;padding:14px 12px;background:#b83d53;color:#fff;font-size:clamp(18px,5vw,22px);font-weight:900;cursor:pointer;box-shadow:0 4px 0 #7f2637}
+        .rule-confirm-start:active{transform:translateY(2px);box-shadow:0 2px 0 #7f2637}
+        @keyframes startCountPop{0%{transform:scale(1.55);opacity:0}55%{transform:scale(1);opacity:1}100%{transform:scale(.96);opacity:1}}
+        #nyokkiBtn.game-waiting{pointer-events:none!important;opacity:.45!important}
+        #nyokkiBtn.nyokki-locked{pointer-events:none!important;opacity:.45!important}
+        .chat-input,.floating-chat-message,.ranking-chat-message{white-space:pre-wrap!important;overflow-wrap:anywhere!important;word-break:break-word!important}
+        .floating-chat-message,.ranking-chat-message{max-width:92%!important}
 </style>
+
+<style>
+.reaction-btn {
+    min-width: 0;
+    touch-action: manipulation;
+}
+</style>
+
+
+<style id="firebase-room-css">
+#onlineRoomOverlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:20000;
+    display:flex; align-items:center; justify-content:center; padding:18px;
+}
+#onlineRoomCard{
+    width:100%; max-width:360px; background:#fff; border-radius:22px;
+    padding:22px 20px; box-shadow:0 12px 35px rgba(0,0,0,.22);
+}
+#onlineRoomCard h2{margin:0 0 6px; color:#b83d53; font-size:21px}
+#onlineRoomCard p{margin:0 0 14px; color:#666; font-size:12px; line-height:1.5}
+#onlineRoomCard input{
+    width:100%; padding:12px; margin:5px 0; border:1px solid #ddd;
+    border-radius:12px; font-size:15px; outline:none; background:#faf8f5;
+}
+#onlineJoinBtn{
+    width:100%; margin-top:9px; padding:13px; border:0; border-radius:13px;
+    background:#b83d53; color:#fff; font-size:15px; font-weight:bold; cursor:pointer;
+}
+</style>
+
 </head>
 <body>
-<div id="start">
-  <div class="start-card card">
-    <div class="sub">EXPO 2025 OMAN • TRADITIONAL BOARD GAME</div>
-    <h1>ターブ<span>。</span></h1>
-    <p>あなた1人＋CPU3人で遊ぶ、4本の棒を使ったオマーンの伝統ゲーム風ボードゲーム。</p>
-    <div class="rules">
-      <div class="rule">🎲 <b>4本の棒</b><br>表の数だけ進みます。</div>
-      <div class="rule">✨ <b>ターブ</b><br>4本すべて裏なら8。さらにもう一度。</div>
-      <div class="rule">✂️ <b>カット</b><br>相手を追い越すと相手のマディナへ。</div>
-      <div class="rule">🏁 <b>ゴール</b><br>4個すべてゴールで勝利。カット/ゴールは連続手番。</div>
-    </div>
-    <button class="btn" id="startBtn">ゲームを開始</button>
-    <div class="help">外周＝反時計回り / 内周＝時計回り。自分の駒同士は重なっても合体しません。</div>
+
+<div id="onlineRoomOverlay">
+  <div id="onlineRoomCard">
+    <h2>🎮 オンライン対戦</h2>
+    <p>名前を入力してください。全員が同じ部屋で対戦します。</p>
+    <input id="onlineNameInput" type="text" maxlength="12" placeholder="名前（例：たろう）">
+    <button id="onlineJoinBtn">ゲームをはじめる</button>
+    <div id="onlineJoinError" style="color:#b83d53;font-size:12px;margin-top:8px;min-height:16px;"></div>
   </div>
 </div>
 
-<div id="game" class="wrap">
-<header>
-  <div><div class="logo">ターブ。</div><div class="sub">4 PLAYERS • YOU VS 3 CPU</div></div>
-  <button class="btn alt" id="newBtn">最初から</button>
-</header>
-<div class="board-card card">
-  <div class="board" id="board"><div class="grid" id="grid"></div></div>
-  <div class="legend">
-    <span><i class="dot" style="background:#e8a9a0"></i> あなた</span>
-    <span><i class="dot" style="background:#54a9a0"></i> 左CPU</span>
-    <span><i class="dot" style="background:#6a9d65"></i> 上CPU</span>
-    <span><i class="dot" style="background:#e0a35a"></i> 右CPU</span>
-  </div>
-  <div style="text-align:center;font-size:12px;opacity:.75">← 外周は反時計回り　｜　内周は時計回り →</div>
-</div>
-<div class="main">
-  <section class="panel card">
-    <div class="turn" id="turn">あなたの番</div>
-    <div class="status" id="status">棒を振ってください。</div>
-    <div class="sticks" id="sticks">
-      <div class="stick"></div><div class="stick"></div><div class="stick"></div><div class="stick"></div>
-    </div>
-    <div class="resultBox" id="sum">—</div>
-    <div class="actions">
-      <button class="btn" id="rollBtn">棒を振る →</button>
-      <button class="btn alt" id="autoBtn">選択中の駒を進める</button>
-    </div><div id="moveControls" class="help" style="margin-top:10px"></div>
-    <div class="help">出た目は複数の駒へ自由に分けられます。人間の手番では、1個ずつ移動先を選べます。</div>
-  </section>
-  <aside class="panel card">
-    <b>現在の進行</b>
-    <div id="scores" class="log"></div>
-    <div class="help">CPUは状況を見て駒を選びます。カット・ターブ・ゴールは連続手番になります。</div>
-    <div id="log" class="log"></div>
-  </aside>
-</div>
-</div>
 
-<div class="overlay" id="overlay"><div class="pop"><h2 id="popTitle"></h2><p id="popText"></p><button class="btn" id="closePop" style="margin-top:16px">続ける</button></div></div>
-<div id="toast"></div>
+    <div class="mushroom-reaction-fx-layer" id="mushroomReactionFxLayer"></div>
+
+    <div class="container">
+        <!-- 1. 自分の名前が一番上（自分の名前の横に自分の得点を表示） -->
+        <div class="status-card">
+            <div class="status-top-row">
+                <div class="user-info">
+                    <div class="avatar" id="myAvatar">?</div>
+                    <div>
+                        <div style="font-size: 11px; color: #888;">あなた</div>
+                        <div style="font-weight: bold; font-size: 14px;"><span id="myNameDisplay">-</span> <span style="color: #b83d53; font-size: 13px; margin-left: 6px;" id="myScoreContainer">(<span id="myScoreDisplay">0</span>点)</span></div>
+                    </div>
+                </div>
+                <!-- タイマー表示 -->
+                <div class="timer-display" id="timerDisplay">
+                    ⏱️ 03:00
+                </div>
+            </div>
+            <div class="participants">
+                <span>👤</span> <span id="participantsText">3人が参加中</span>
+            </div>
+        </div>
+
+        <!-- 2. 次に現在の数と最高到達点 -->
+        <div class="score-card">
+            <div class="score-box">
+                <span class="label">現在の数</span>
+                <span class="value" id="currentCount">0</span>
+            </div>
+            <div class="score-box">
+                <span class="label">最高到達点</span>
+                <span class="value" id="maxCount" style="color: #666; font-size: 15px;">0</span>
+            </div>
+        </div>
+
+        <!-- 3. 次にボタンの画面（ゲーム画面） -->
+        <div class="game-card" id="gameCard">
+            <div class="game-main-row">
+                <div class="myaku-img-card" id="myakuImgCard">
+                    <img id="myakuImage" src="myak.jpg" alt="ミャクミャク">
+                </div>
+                <div class="nyokki-btn" id="nyokkiBtn">
+                    <div class="nyokki-content">
+                        <h2>ミャク</h2>
+                        <div class="sub-en">MYAKU</div>
+                        <p>おして、つなぐ</p>
+                    </div>
+                </div>
+            </div>
+            <p class="game-desc" id="gameDesc">
+                同じ部屋の誰かと、ひとつの瞬間をつくろう。<br>
+                押すたびに数字が増えるが、かぶると大変なことに！
+            </p>
+            <!-- ボタンの下を流れるチャット表示 -->
+            <div class="floating-chat-area" id="floatingChatArea"></div>
+        </div>
+
+        <!-- 4. 次にチャットとリアクション -->
+        <div class="chat-section">
+            <div class="chat-input-area">
+                <textarea id="chatInput" class="chat-input" rows="1" placeholder="ひとこと送る..." maxlength="500"></textarea>
+                <button class="chat-submit" id="chatSubmit">➔</button>
+            </div>
+            
+            <!-- リアクションボタンエリア -->
+            <div class="reaction-bar">
+                <button class="reaction-btn" data-reaction="🍄">🍄</button>
+                <button class="reaction-btn" data-reaction="😁">😁</button>
+                <button class="reaction-btn" data-reaction="😍">😍</button>
+                <button class="reaction-btn" data-reaction="🤣">🤣</button>
+                <button class="reaction-btn" data-reaction="😨">😨</button>
+                <button class="reaction-btn" data-reaction="👏">👏</button>
+                <button class="reaction-btn" data-reaction="🔥">🔥</button>
+            </div>
+        </div>
+
+        <!-- 5. 次に上位3人 -->
+        <div class="live-ranking-card">
+            <div class="live-ranking-title">🏆 現在の上位3人</div>
+            <div class="live-ranking-items" id="liveRankingItems">
+                <!-- 動的に生成されます -->
+            </div>
+        </div>
+
+        <!-- 現在のルール（上位3人の直下） -->
+        <div class="current-rule-card" id="currentRuleCard">
+            <div class="current-rule-title">📢 今回のルール</div>
+            <div class="current-rule-items" id="currentRuleItems"></div>
+        </div>
+
+        <!-- 上位3人の下のチャットログ -->
+        <div class="ranking-chat-log">
+            <div class="ranking-chat-log-title">💬 チャットログ</div>
+            <div id="rankingChatMessages"></div>
+        </div>
+
+        <div class="participant-list-card">
+            <div class="participant-list-title">👥 参加者一覧</div>
+            <div class="participant-list" id="participantList"></div>
+        </div>
+
+        <!-- 6. チャットログ（流れる表示に変更したため非表示） -->
+        <div class="chat-section chat-log-hidden" style="display: none;">
+            <div class="chat-messages" id="chatMessages"></div>
+        </div>
+
+        <!-- 7. 退出・ルール変更ボタン -->
+        <div class="rule-footer" style="flex-direction: column; gap: 8px;">
+            <button class="rule-btn" id="exitGameBtn">
+                🚪 退出
+            </button>
+            <button class="rule-btn" id="resetGameBtn">
+                🔄 ゲームをリセット
+            </button>
+            <button class="rule-btn" id="openRuleModal">
+                ⚙️ ルール変更
+            </button>
+        </div>
+    </div>
+
+    <!-- ゲーム開始前のルール確認 -->
+    <div class="rule-confirm-overlay" id="ruleConfirmOverlay">
+        <div class="rule-confirm-card">
+            <h2 class="rule-confirm-title">📢 今回のルール</h2>
+            <ul class="rule-confirm-list">
+                <li id="confirmRuleTime">⏱️ 時間：3分</li>
+                <li id="confirmRuleFail">💥 かぶったら：0点になる</li>
+                <li id="confirmRuleSuccess">🌱 成功したら：＋1点</li>
+                <li id="confirmRuleWin">🏆 優勝：5点</li>
+                <li id="confirmRuleDisqualify">❌ 失格：3回</li>
+                <li id="confirmRuleMushroom">🍄 キノコタイム：ON</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ゲーム開始カウントダウン -->
+    <div class="start-countdown-overlay" id="startCountdownOverlay">
+        <div class="start-countdown-card">
+            <div class="start-countdown-number" id="startCountdownNumber">3</div>
+            <div class="start-countdown-text" id="startCountdownText">ゲーム開始まで</div>
+        </div>
+    </div>
+
+    <!-- キノコタイム -->
+    <div class="mushroom-overlay" id="mushroomOverlay">
+        <div class="mushroom-card">
+            <h2 class="mushroom-title">🍄 キノコターイム！！</h2>
+            <div class="mushroom-countdown" id="mushroomCountdown">残り 5秒</div>
+            <p class="mushroom-count">🍄をできるだけたくさん押そう！<br>いちばん多く押したプレイヤーが＋1点！</p>
+            <button class="mushroom-reaction-btn reaction-btn" id="mushroomReactionBtn" type="button" data-reaction="🍄">🍄</button>
+            <p id="mushroomMyCount" style="margin:10px 0 0;font-weight:bold;color:#b83d53;">あなた：0回</p>
+        </div>
+    </div>
+
+    <!-- キノコタイム結果（終了時に上位3人を表示） -->
+    <div class="mushroom-result-overlay" id="mushroomResultOverlay">
+        <div class="mushroom-result-card">
+            <h2 class="mushroom-result-title">🍄 キノコタイム結果！</h2>
+            <div id="mushroomResultRanking"></div>
+            <p class="mushroom-result-note">この5秒間の🍄リアクション数です</p>
+        </div>
+    </div>
+
+    <!-- 表彰画面・ランキングモーダル -->
+    <div class="result-overlay" id="resultModal">
+        <div class="result-card">
+            <h2 class="result-title" id="resultTitle">🏆 試合終了！</h2>
+            <p class="result-subtitle" id="resultSubtitle">お疲れ様でした！最終結果はこちらです</p>
+            
+            <div class="ranking-list" id="rankingList">
+                <!-- ランキング要素が動的に入ります -->
+            </div>
+
+            <button class="restart-btn" id="restartBtn">ゲーム画面に戻る</button>
+        </div>
+    </div>
+
+    <!-- ルール変更モーダル (①〜⑤) -->
+    <div class="modal-overlay" id="ruleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ルール設定</h3>
+                <button class="close-btn" id="closeRuleModal">&times;</button>
+            </div>
+
+            <!-- ① 時間（1〜5分、無制限） -->
+            <div class="rule-item">
+                <label for="ruleTime">① 時間</label>
+                <select id="ruleTime">
+                    <option value="1">1分</option>
+                    <option value="2">2分</option>
+                    <option value="3" selected>3分</option>
+                    <option value="4">4分</option>
+                    <option value="5">5分</option>
+                    <option value="unlimited">無制限</option>
+                </select>
+            </div>
+
+            <!-- ② 失敗（ニョッキがかぶったとき） -->
+            <div class="rule-item">
+                <label for="ruleFail">② 失敗（かぶったとき）</label>
+                <select id="ruleFail">
+                    <option value="0" selected>0になる</option>
+                    <option value="-1">得点 −1</option>
+                    <option value="-2">得点 −2</option>
+                    <option value="-3">得点 −3</option>
+                    <option value="-4">得点 −4</option>
+                    <option value="-5">得点 −5</option>
+                </select>
+            </div>
+
+            <!-- ③ 成功（ニョッキがかぶらなかったとき） -->
+            <div class="rule-item">
+                <label for="ruleSuccess">③ 成功（かぶらなかったとき）</label>
+                <select id="ruleSuccess">
+                    <option value="1" selected>得点 ＋1</option>
+                    <option value="2">得点 ＋2</option>
+                    <option value="3">得点 ＋3</option>
+                    <option value="4">得点 ＋4</option>
+                    <option value="5">得点 ＋5</option>
+                </select>
+            </div>
+
+            <!-- ④ 優勝（何点取ったら優勝か） -->
+            <div class="rule-item">
+                <label for="ruleWin">④ 優勝（必要ポイント）</label>
+                <select id="ruleWin">
+                    <option value="1">1点</option>
+                    <option value="2">2点</option>
+                    <option value="3">3点</option>
+                    <option value="4">4点</option>
+                    <option value="5">5点</option>
+                    <option value="6">6点</option>
+                    <option value="7">7点</option>
+                    <option value="8">8点</option>
+                    <option value="9">9点</option>
+                    <option value="10" selected>10点</option>
+                </select>
+            </div>
+
+            <!-- ⑤ 失格（設定した回数かぶったら参加できなくなる） -->
+            <div class="rule-item">
+                <label for="ruleDisqualify">⑤ 失格（かぶり回数制限）</label>
+                <select id="ruleDisqualify">
+                    <option value="1">1回</option>
+                    <option value="2">2回</option>
+                    <option value="3">3回</option>
+                    <option value="4">4回</option>
+                    <option value="5">5回</option>
+                    <option value="unlimited" selected>無制限</option>
+                </select>
+            </div>
+
+            <!-- ⑥ キノコタイム -->
+            <div class="rule-item">
+                <label for="ruleMushroom">⑥ キノコタイム</label>
+                <select id="ruleMushroom">
+                    <option value="off" selected>OFF</option>
+                    <option value="on">ON</option>
+                </select>
+            </div>
+
+            <button class="save-rule-btn" id="saveRuleBtn">設定を保存する</button>
+        </div>
+    </div>
+
+    
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 
 <script>
-(() => {
-const N=24, INNER=8;
-const players=[
- {id:'you',name:'あなた',cls:'you',color:'#e8a9a0',start:0},
- {id:'cpu1',name:'左CPU',cls:'cpu1',color:'#54a9a0',start:6},
- {id:'cpu2',name:'上CPU',cls:'cpu2',color:'#6a9d65',start:12},
- {id:'cpu3',name:'右CPU',cls:'cpu3',color:'#e0a35a',start:18}
-];
+        // Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'tap') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'kaburi') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.setValueAtTime(90, now + 0.15);
+                osc.frequency.setValueAtTime(70, now + 0.3);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'success') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(520, now); osc.frequency.exponentialRampToValueAtTime(900, now + 0.12); gain.gain.setValueAtTime(0.18, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16); osc.start(now); osc.stop(now + 0.16);
+            } else if (type === 'countdown') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(520, now); gain.gain.setValueAtTime(0.16, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12); osc.start(now); osc.stop(now + 0.12);
+            } else if (type === 'start') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(500, now); osc.frequency.exponentialRampToValueAtTime(1100, now + 0.35); gain.gain.setValueAtTime(0.25, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45); osc.start(now); osc.stop(now + 0.45);
+            } else if (type === 'reset') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(180, now + 0.18); gain.gain.setValueAtTime(0.18, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'reaction') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(650, now); gain.gain.setValueAtTime(0.10, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08); osc.start(now); osc.stop(now + 0.08);
+            } else if (type === 'chat') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(700, now); gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07); osc.start(now); osc.stop(now + 0.07);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.setValueAtTime(450, now + 0.1);
+                osc.frequency.setValueAtTime(600, now + 0.2);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
+        }
+
+        // ゲーム状態変数
+        let currentGameTime = 180;
+        let remainingTime = 180;
+        let timerInterval = null;
+        // Firebaseの状態更新のたびに同じタイマーを再起動しないための記録。
+        let lastTimerStartAt = 0;
+        let lastTimerDurationSec = -1;
+        let isGameOver = false;
+        let isGameStarted = true;
+        let startCountdownInterval = null;
+
+        // キノコタイム
+        let mushroomInterval = null;
+        let mushroomTimeout = null;
+        let mushroomCountdownInterval = null;
+        let mushroomScheduleTimeout = null;
+        let lastMushroomStartAt = 0;
+        let isMushroomTime = false;
+        let mushroomReactionCounts = {};
+
+        // カウント・最高到達点・自分の被り回数・失格フラグ
+        let currentCount = 0;
+        let maxCount = 0;
+        let myKaburiCount = 0;
+        let isDisqualified = false;
+
+        // プレイヤーのスコアデータ（自分「か」＋CPU参加者）
+        let players = [];
+
+        const timerDisplay = document.getElementById('timerDisplay');
+        const currentCountSpan = document.getElementById('currentCount');
+        const maxCountSpan = document.getElementById('maxCount');
+        const liveRankingItems = document.getElementById('liveRankingItems');
+        const myScoreContainer = document.getElementById('myScoreContainer');
+        const participantsText = document.getElementById('participantsText');
+        const participantList = document.getElementById('participantList');
+        const gameCard = document.getElementById('gameCard');
+        const mushroomOverlay = document.getElementById('mushroomOverlay');
+        const mushroomCountdown = document.getElementById('mushroomCountdown');
+        const mushroomReactionBtn = document.getElementById('mushroomReactionBtn');
+        const mushroomMyCount = document.getElementById('mushroomMyCount');
+        const mushroomReactionFxLayer = document.getElementById('mushroomReactionFxLayer');
+        const reactionBar = document.querySelector('.reaction-bar');
+
+        function formatTime(seconds) {
+            if (seconds === 'unlimited' || seconds < 0) return '⏱️ ∞ 無制限';
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `⏱️ ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function showMushroomReactionFx() {
+            if (!isMushroomTime || !mushroomReactionFxLayer) return;
+
+            const fx = document.createElement('div');
+            fx.className = 'mushroom-reaction-fx';
+            fx.textContent = '🍄';
+
+            const left = 5 + Math.random() * 90;
+            const rise = -(220 + Math.random() * 380);
+            const drift = `${-120 + Math.random() * 240}px`;
+            const rotate = `${-35 + Math.random() * 70}deg`;
+            const size = 28 + Math.random() * 24;
+
+            fx.style.left = `${left}%`;
+            fx.style.fontSize = `${size}px`;
+            fx.style.setProperty('--rise', `${rise}px`);
+            fx.style.setProperty('--drift', drift);
+            fx.style.setProperty('--rotate', rotate);
+
+            mushroomReactionFxLayer.appendChild(fx);
+            setTimeout(() => fx.remove(), 1500);
+        }
+
+        function updateCurrentRules(rules = null) {
+            const el = document.getElementById('currentRuleItems');
+            if (!el) return;
+            const time = rules?.time ?? document.getElementById('ruleTime')?.value ?? '3';
+            const fail = rules?.fail ?? document.getElementById('ruleFail')?.value ?? '0';
+            const success = rules?.success ?? document.getElementById('ruleSuccess')?.value ?? '1';
+            const win = rules?.win ?? document.getElementById('ruleWin')?.value ?? '5';
+            const disq = rules?.disqualify ?? document.getElementById('ruleDisqualify')?.value ?? '3';
+            const mushroom = rules?.mushroom ?? document.getElementById('ruleMushroom')?.value ?? 'on';
+            const timeText = time === 'unlimited' ? '無制限' : `${time}分`;
+            const failText = fail === '0' ? '0点になる' : `得点 ${fail}点`;
+            const disqText = disq === 'unlimited' ? 'なし' : `${disq}回`;
+            const mushroomText = (mushroom === 'on' || mushroom === 'ON' || mushroom === 'true') ? 'ON' : 'OFF';
+            el.innerHTML = `
+                <div class="current-rule-item">⏱️ 時間：${timeText}</div>
+                <div class="current-rule-item">💥 かぶったら：${failText}</div>
+                <div class="current-rule-item">🌱 成功したら：＋${success}点</div>
+                <div class="current-rule-item">🏆 優勝：${win}点</div>
+                <div class="current-rule-item">❌ 失格：${disqText}</div>
+                <div class="current-rule-item">🍄 キノコタイム：${mushroomText}</div>`;
+        }
+
+        ['ruleTime','ruleFail','ruleSuccess','ruleWin','ruleDisqualify','ruleMushroom'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', updateCurrentRules);
+        });
+        updateCurrentRules();
+
+        function updateLiveRanking() {
+            let sorted = [...players].sort((a, b) => {
+                if (a.isDisqualified && !b.isDisqualified) return 1;
+                if (!a.isDisqualified && b.isDisqualified) return -1;
+                return b.score - a.score;
+            });
+            
+            liveRankingItems.innerHTML = '';
+            
+            sorted.slice(0, 3).forEach((p, idx) => {
+                const row = document.createElement('div');
+                row.className = 'live-ranking-row';
+                let scoreText = p.isDisqualified ? '<span style="color: #b83d53; font-weight: bold;">失格</span>' : `<span style="font-weight: bold; color: #b83d53;">${p.score}点</span>`;
+                row.innerHTML = `
+                    <span>${idx + 1}. ${p.name} ${p.isMe ? '(あなた)' : ''}</span>
+                    ${scoreText}
+                `;
+                liveRankingItems.appendChild(row);
+            });
+
+            // 自分の得点表示部分を更新
+            let me = players.find(p => p.isMe);
+            if (me) {
+                if (me.isDisqualified) {
+                    myScoreContainer.innerHTML = '<span style="color: #b83d53; font-weight: bold; margin-left: 6px;">失格</span>';
+                } else {
+                    myScoreContainer.innerHTML = `(<span id="myScoreDisplay">${me.score}</span>点)`;
+                }
+            }
+        }
+
+        function clearMushroomLocalTimers() {
+            if (mushroomTimeout) { clearTimeout(mushroomTimeout); mushroomTimeout = null; }
+            if (mushroomCountdownInterval) { clearInterval(mushroomCountdownInterval); mushroomCountdownInterval = null; }
+            if (mushroomScheduleTimeout) { clearTimeout(mushroomScheduleTimeout); mushroomScheduleTimeout = null; }
+        }
+
+        function stopMushroomTimer() {
+            clearMushroomLocalTimers();
+            isMushroomTime = false;
+            mushroomOverlay.classList.remove('active');
+            if (reactionBar) reactionBar.classList.remove('mushroom-active');
+            nyokkiBtn.style.pointerEvents = '';
+            nyokkiBtn.style.opacity = '';
+        }
+
+        function finishMushroomTime() {
+            if (!isMushroomTime) return;
+            clearMushroomLocalTimers();
+            isMushroomTime = false;
+            mushroomOverlay.classList.remove('active');
+            if (reactionBar) reactionBar.classList.remove('mushroom-active');
+            nyokkiBtn.style.pointerEvents = '';
+            nyokkiBtn.style.opacity = '';
+
+            // キノコタイムの結果はFirebase側で1回だけ確定し、勝者の点数も共有状態へ加算する。
+            if (onlineReady && roomRef) {
+                roomRef.child('game').transaction(game => {
+                    if (!game || !game.mushroom || !game.mushroom.active) return;
+                    // 5秒の終了時刻を過ぎた後のリアクションは結果に含めない。
+                    const mushroomStartAt = Number(game.mushroom.startAt || 0);
+                    if (mushroomStartAt > 0 && getServerNow() < mushroomStartAt + 5000) return;
+                    const counts = game.mushroom.counts || {};
+                    const entries = Object.entries(counts);
+                    const maxReactions = entries.length ? Math.max(...entries.map(([, c]) => Number(c || 0))) : 0;
+                    const winners = entries.filter(([, c]) => Number(c || 0) === maxReactions && maxReactions > 0).map(([id]) => id);
+
+                    // 終了時点のリアクション数を多い順に保存し、上位3人を全員の画面に表示する。
+                    const mushroomRanking = entries
+                        .map(([id, c]) => ({ id, name: game.players?.[id]?.name || '名無し', count: Number(c || 0) }))
+                        .filter(p => game.players?.[p.id] && !game.players[p.id].isDisqualified)
+                        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ja'))
+                        .slice(0, 3);
+
+                    game.mushroom.active = false;
+                    game.mushroom.counts = {};
+                    game.mushroom.startAt = 0;
+                    game.mushroom.nextAt = getServerNow() + 30000 + Math.floor(Math.random() * 60000);
+                    game.mushroom.lastRanking = mushroomRanking;
+                    game.mushroom.lastResultAt = getServerNow();
+
+                    if (winners.length === 1 && game.players && game.players[winners[0]] && !game.players[winners[0]].isDisqualified) {
+                        const winnerId = winners[0];
+                        game.players[winnerId].score = Number(game.players[winnerId].score || 0) + 1;
+                        game.mushroom.lastResult = `${game.players[winnerId].name}さんが最多${maxReactions}回で＋1点！`;
+
+                        // キノコタイムの＋1点で目標点に到達した場合も、その場で優勝確定。
+                        const winTarget = parseInt(document.getElementById('ruleWin').value) || 0;
+                        if (winTarget > 0 && game.players[winnerId].score >= winTarget) {
+                            game.isGameOver = true;
+                            game.gameOverReason = `目標ポイント ${winTarget}点達成で優勝！`;
+                        }
+                    } else if (winners.length > 1) {
+                        game.mushroom.lastResult = `${winners.map(id => game.players[id]?.name || '名無し').join('・')}さんが同数${maxReactions}回で同率！`;
+                    } else {
+                        game.mushroom.lastResult = '今回は誰も押しませんでした。';
+                    }
+                    return game;
+                });
+            }
+        }
+
+        function startMushroomTime(startAt, sharedCounts = {}) {
+            if (isGameOver || document.getElementById('ruleMushroom').value !== 'on') return;
+            const start = Number(startAt || Date.now());
+            if (start <= lastMushroomStartAt) return;
+            lastMushroomStartAt = start;
+
+            clearMushroomLocalTimers();
+            isMushroomTime = true;
+            mushroomReactionCounts = { ...sharedCounts };
+            const me = players.find(p => p.isMe);
+            if (me && mushroomReactionCounts[me.id] === undefined) mushroomReactionCounts[me.id] = 0;
+
+            mushroomOverlay.classList.add('active');
+            if (reactionBar) reactionBar.classList.add('mushroom-active');
+            nyokkiBtn.style.pointerEvents = 'none';
+            nyokkiBtn.style.opacity = '0.45';
+
+            const updateCountdown = () => {
+                const elapsed = Math.max(0, getServerNow() - start);
+                const remaining = Math.max(0, Math.ceil((5000 - elapsed) / 1000));
+                mushroomCountdown.textContent = `残り ${remaining}秒`;
+                if (remaining <= 0) finishMushroomTime();
+            };
+            updateCountdown();
+            mushroomCountdownInterval = setInterval(updateCountdown, 100);
+            mushroomMyCount.textContent = `あなた：${me ? Number(mushroomReactionCounts[me.id] || 0) : 0}回`;
+            playSound('tap');
+            addLogMessage('🍄 キノコターイム！！', true);
+
+            mushroomTimeout = setTimeout(finishMushroomTime, Math.max(0, 5000 - (getServerNow() - start)));
+        }
+
+        function startMushroomScheduler() {
+            if (mushroomInterval) { clearInterval(mushroomInterval); mushroomInterval = null; }
+            if (mushroomScheduleTimeout) { clearTimeout(mushroomScheduleTimeout); mushroomScheduleTimeout = null; }
+            if (document.getElementById('ruleMushroom').value !== 'on' || !roomRef) return;
+
+            const gameRef = roomRef.child('game');
+            gameRef.transaction(game => {
+                if (!game || game.isGameOver) return game;
+                if (!game.mushroom) game.mushroom = { active: false, startAt: 0, nextAt: getServerNow() + 30000 + Math.floor(Math.random() * 60000), counts: {}, lastResult: '', lastRanking: [], lastResultAt: 0 };
+                if (!game.mushroom.nextAt || Number(game.mushroom.nextAt) <= getServerNow()) {
+                    game.mushroom.nextAt = getServerNow() + 30000 + Math.floor(Math.random() * 60000);
+                }
+                return game;
+            });
+        }
+
+        function startTimer(startAt = 0, durationSec = 0) {
+            const normalizedStartAt = Number(startAt || 0);
+            const normalizedDurationSec = Number(durationSec || 0);
+
+            // 同じゲームの同じタイマーをFirebaseの更新ごとに再起動しない。
+            // これが再起動され続けると、タイムアップ直後に残り時間が戻ることがあります。
+            if (
+                normalizedStartAt > 0 &&
+                normalizedStartAt === lastTimerStartAt &&
+                normalizedDurationSec === lastTimerDurationSec
+            ) {
+                return;
+            }
+
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+            isGameOver = false;
+
+            if (normalizedStartAt > 0) {
+                lastTimerStartAt = normalizedStartAt;
+                lastTimerDurationSec = normalizedDurationSec;
+            }
+
+            const timeVal = document.getElementById('ruleTime').value;
+            startMushroomScheduler();
+            if (timeVal === 'unlimited' && !durationSec) {
+                timerDisplay.textContent = '⏱️ ∞ 無制限';
+                return;
+            }
+
+            const duration = Number(durationSec || (parseInt(timeVal) * 60) || 180);
+            const started = Number(startAt || 0);
+            if (!started) {
+                timerDisplay.textContent = formatTime(duration);
+                return;
+            }
+
+            const updateTimer = () => {
+                const elapsed = Math.max(0, getServerNow() - started);
+                remainingTime = Math.max(0, Math.ceil(duration - elapsed / 1000));
+                timerDisplay.textContent = formatTime(remainingTime);
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    timerDisplay.textContent = '⏱️ 00:00 (終了)';
+                    triggerGameOver('タイムアップ！');
+                }
+            };
+            updateTimer();
+            if (remainingTime > 0) timerInterval = setInterval(updateTimer, 250);
+        }
+        updateLiveRanking();
+
+        // アウトー！エフェクト表示用関数
+        function showOutPopup(text) {
+            const popup = document.createElement('div');
+            popup.className = 'out-popup';
+            popup.textContent = text;
+            gameCard.appendChild(popup);
+            setTimeout(() => {
+                popup.remove();
+            }, 800);
+        }
+
+        // 表彰画面・ランキング表示ロジック
+        const resultModal = document.getElementById('resultModal');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultSubtitle = document.getElementById('resultSubtitle');
+        const rankingList = document.getElementById('rankingList');
+        const restartBtn = document.getElementById('restartBtn');
+        const mushroomResultOverlay = document.getElementById('mushroomResultOverlay');
+        const mushroomResultRanking = document.getElementById('mushroomResultRanking');
+        let mushroomResultDisplayTimer = null;
+        let lastMushroomResultKey = '';
+
+        function showMushroomResult(ranking, resultKey = '') {
+            if (!Array.isArray(ranking) || ranking.length === 0) return;
+            // 同じキノコタイムの結果は、Firebaseの同期が何度発生しても1回だけ表示。
+            if (resultKey && resultKey === lastMushroomResultKey) return;
+            if (resultKey) lastMushroomResultKey = resultKey;
+
+            if (mushroomResultDisplayTimer) {
+                clearTimeout(mushroomResultDisplayTimer);
+                mushroomResultDisplayTimer = null;
+            }
+            mushroomResultRanking.innerHTML = '';
+            ranking.slice(0, 3).forEach((p, index) => {
+                const row = document.createElement('div');
+                row.className = 'mushroom-result-row';
+                const medals = ['🥇', '🥈', '🥉'];
+                row.innerHTML = `
+                    <span class="mushroom-result-rank">${medals[index] || (index + 1) + '位'}</span>
+                    <span class="mushroom-result-name">${p.name || '名無し'}${p.id === myPlayerId ? ' (あなた)' : ''}</span>
+                    <span class="mushroom-result-count">${Number(p.count || 0)}回</span>
+                `;
+                mushroomResultRanking.appendChild(row);
+            });
+            mushroomResultOverlay.classList.add('active');
+            playSound('success');
+            mushroomResultDisplayTimer = setTimeout(() => {
+                mushroomResultOverlay.classList.remove('active');
+                mushroomResultDisplayTimer = null;
+            }, 2500);
+        }
+
+        function celebrateResult() {
+            const card = document.querySelector('#resultModal .result-card');
+            if (!card) return;
+            card.classList.remove('celebrate');
+            card.querySelectorAll('.result-confetti,.result-spark').forEach(el => el.remove());
+            void card.offsetWidth;
+            card.classList.add('celebrate');
+            const symbols = ['✨','🎉','⭐','💫','🏆','🎊'];
+            for (let i = 0; i < 24; i++) {
+                const el = document.createElement('span');
+                el.className = 'result-spark';
+                el.textContent = symbols[i % symbols.length];
+                el.style.left = (8 + Math.random()*84) + '%';
+                el.style.top = (22 + Math.random()*48) + '%';
+                el.style.setProperty('--dx', ((Math.random()-.5)*230) + 'px');
+                el.style.setProperty('--dy', (-80 - Math.random()*180) + 'px');
+                el.style.setProperty('--rot', ((Math.random()-.5)*90) + 'deg');
+                el.style.animationDelay = (Math.random()*.35) + 's';
+                card.appendChild(el);
+            }
+            for (let i = 0; i < 55; i++) {
+                const el = document.createElement('span');
+                el.className = 'result-confetti';
+                el.style.left = (Math.random()*100) + '%';
+                el.style.setProperty('--drift', ((Math.random()-.5)*150) + 'px');
+                el.style.setProperty('--rot', (Math.random()*360) + 'deg');
+                el.style.setProperty('--dur', (1.7 + Math.random()*1.8) + 's');
+                el.style.animationDelay = (Math.random()*.55) + 's';
+                card.appendChild(el);
+            }
+        }
+
+        function triggerGameOver(reasonText) {
+            if (isGameOver) return;
+            isGameOver = true;
+            if (timerInterval) clearInterval(timerInterval);
+            stopMushroomTimer();
+
+            if (floatingChatArea) floatingChatArea.innerHTML = '';
+            if (mushroomReactionFxLayer) mushroomReactionFxLayer.innerHTML = '';
+            if (mushroomInterval) { clearInterval(mushroomInterval); mushroomInterval = null; }
+            playSound('win');
+
+            players.sort((a, b) => {
+                if (a.isDisqualified && !b.isDisqualified) return 1;
+                if (!a.isDisqualified && b.isDisqualified) return -1;
+                return b.score - a.score;
+            });
+
+            resultTitle.textContent = `🏆 ${reasonText}`;
+            resultSubtitle.textContent = "最終ランキングを発表します！";
+
+            rankingList.innerHTML = '';
+            let previousScore = null;
+            let previousRank = 0;
+            players.forEach((p, index) => {
+                // 同じ得点は同じ順位。次の順位は人数を飛ばす（1位, 1位, 3位…）。
+                const rank = p.isDisqualified ? (previousRank || index + 1) : (previousScore === p.score ? previousRank : index + 1);
+                if (!p.isDisqualified) {
+                    previousScore = p.score;
+                    previousRank = rank;
+                }
+                const item = document.createElement('div');
+                item.className = `ranking-item ${rank === 1 && !p.isDisqualified ? 'top-1' : ''} top-${Math.min(rank, 3)}`;
+
+                let scoreText = p.isDisqualified ? '<span style="color: #b83d53; font-weight: bold;">失格</span>' : `<span style="font-weight: bold; color: #b83d53;">${p.score}点</span>`;
+
+                item.innerHTML = `
+                    <div class="ranking-left">
+                        <div class="rank-badge">${rank}</div>
+                        <div>${p.name} ${p.isMe ? '(あなた)' : ''}</div>
+                    </div>
+                    <div>${scoreText}</div>
+                `;
+                rankingList.appendChild(item);
+            });
+
+            resultModal.classList.add('active');
+            celebrateResult();
+        }
+
+        function beginGameWithCountdown() {
+            if (startCountdownInterval) clearInterval(startCountdownInterval);
+            stopMushroomTimer();
+            if (mushroomInterval) { clearInterval(mushroomInterval); mushroomInterval = null; }
+            isGameOver = false;
+            isGameStarted = false;
+            nyokkiBtn.classList.add('game-waiting');
+
+            // ルールを表示して3秒待ってから、3カウント→スタート。
+            const ruleConfirmOverlay = document.getElementById('ruleConfirmOverlay');
+            const overlay = document.getElementById('startCountdownOverlay');
+            const number = document.getElementById('startCountdownNumber');
+            const text = document.getElementById('startCountdownText');
+            const timeValue = document.getElementById('ruleTime').value;
+            const failValue = document.getElementById('ruleFail').value;
+            const successValue = document.getElementById('ruleSuccess').value;
+            const winValue = document.getElementById('ruleWin').value;
+            const disqualifyValue = document.getElementById('ruleDisqualify').value;
+            const mushroomValue = document.getElementById('ruleMushroom').value;
+
+            document.getElementById('confirmRuleTime').textContent = `⏱️ 時間：${timeValue === 'unlimited' ? '無制限' : timeValue + '分'}`;
+            document.getElementById('confirmRuleFail').textContent = `💥 かぶったら：${failValue === '0' ? '0点になる' : '得点 −' + Math.abs(parseInt(failValue) || 0)}`;
+            document.getElementById('confirmRuleSuccess').textContent = `🌱 成功したら：＋${parseInt(successValue) || 1}点`;
+            document.getElementById('confirmRuleWin').textContent = `🏆 優勝：${parseInt(winValue) || 10}点`;
+            document.getElementById('confirmRuleDisqualify').textContent = `❌ 失格：${disqualifyValue === 'unlimited' ? 'なし（無制限）' : disqualifyValue + '回'}`;
+            document.getElementById('confirmRuleMushroom').textContent = `🍄 キノコタイム：${mushroomValue === 'on' ? 'ON' : 'OFF'}`;
+
+            ruleConfirmOverlay.classList.add('active');
+            overlay.classList.remove('active');
+            number.classList.remove('start-label');
+
+            setTimeout(() => {
+                ruleConfirmOverlay.classList.remove('active');
+                overlay.classList.add('active');
+                let count = 3;
+                number.textContent = count;
+                text.textContent = 'ゲーム開始まで';
+                playSound('countdown');
+
+                startCountdownInterval = setInterval(() => {
+                    count--;
+                    if (count > 0) {
+                        number.textContent = count;
+                        number.classList.remove('start-label');
+                        number.style.animation='none'; void number.offsetWidth; number.style.animation='startCountPop .7s ease-out';
+                        playSound('countdown');
+                    } else {
+                        clearInterval(startCountdownInterval); startCountdownInterval=null;
+                        number.textContent='スタート！'; text.textContent='';
+                        number.classList.add('start-label');
+                        playSound('start');
+                        setTimeout(() => {
+                            overlay.classList.remove('active'); isGameStarted=true; nyokkiBtn.classList.remove('game-waiting');
+                            const durationSec = (document.getElementById('ruleTime').value === 'unlimited') ? 0 : ((parseInt(document.getElementById('ruleTime').value) || 3) * 60);
+                            const timerStartAt = getServerNow();
+                            if (onlineReady && roomRef) {
+                                roomRef.child('game').transaction(game => {
+                                    if (!game || game.isGameOver) return;
+                                    game.timerStartAt = timerStartAt;
+                                    game.timerDurationSec = durationSec;
+                                    return game;
+                                });
+                            }
+                            startTimer(timerStartAt, durationSec);
+                        },700);
+                    }
+                },1000);
+            },3000);
+        }
+
+        // Firebaseのリセット時刻を基準に、全端末で同時に「ルール3秒→3カウント→開始」。
+        let syncedStartTimer = null;
+        function startSyncedRuleAndCountdown(resetAt) {
+            if (syncedStartTimer) { clearInterval(syncedStartTimer); syncedStartTimer = null; }
+            const ruleConfirmOverlay = document.getElementById('ruleConfirmOverlay');
+            const overlay = document.getElementById('startCountdownOverlay');
+            const number = document.getElementById('startCountdownNumber');
+            const text = document.getElementById('startCountdownText');
+            const rules = {
+                time: document.getElementById('ruleTime').value,
+                fail: document.getElementById('ruleFail').value,
+                success: document.getElementById('ruleSuccess').value,
+                win: document.getElementById('ruleWin').value,
+                disqualify: document.getElementById('ruleDisqualify').value,
+                mushroom: document.getElementById('ruleMushroom').value
+            };
+            let lastCountdownNumber = null;
+            document.getElementById('confirmRuleTime').textContent = `⏱️ 時間：${rules.time === 'unlimited' ? '無制限' : rules.time + '分'}`;
+            document.getElementById('confirmRuleFail').textContent = `💥 かぶったら：${rules.fail === '0' ? '0点になる' : '得点 −' + Math.abs(parseInt(rules.fail) || 0)}`;
+            document.getElementById('confirmRuleSuccess').textContent = `🌱 成功したら：＋${parseInt(rules.success) || 1}点`;
+            document.getElementById('confirmRuleWin').textContent = `🏆 優勝：${parseInt(rules.win) || 5}点`;
+            document.getElementById('confirmRuleDisqualify').textContent = `❌ 失格：${rules.disqualify === 'unlimited' ? 'なし（無制限）' : rules.disqualify + '回'}`;
+            document.getElementById('confirmRuleMushroom').textContent = `🍄 キノコタイム：${rules.mushroom === 'on' ? 'ON' : 'OFF'}`;
+            ruleConfirmOverlay.classList.add('active');
+            overlay.classList.remove('active');
+            number.classList.remove('start-label');
+            isGameStarted = false;
+            nyokkiBtn.classList.add('game-waiting');
+
+            const tick = () => {
+                const now = getServerNow();
+                const untilCountdown = Number(resetAt) + 3000 - now;
+                if (untilCountdown > 0) return;
+                ruleConfirmOverlay.classList.remove('active');
+                overlay.classList.add('active');
+                const elapsed = now - (Number(resetAt) + 3000);
+                const count = Math.floor(elapsed / 1000);
+                if (count < 3) {
+                    const n = 3 - count;
+                    text.textContent = 'ゲーム開始まで';
+                    // 50msごとの同期チェックで同じ数字を何度も再描画しない。
+                    // これで「2」「1」の点滅・ちらつきを防ぐ。
+                    if (n !== lastCountdownNumber) {
+                        number.textContent = n;
+                        number.classList.remove('start-label');
+                        if (lastCountdownNumber !== null) {
+                            number.style.animation='none';
+                            void number.offsetWidth;
+                            number.style.animation='startCountPop .7s ease-out';
+                            playSound('countdown');
+                        }
+                        lastCountdownNumber = n;
+                    }
+                } else {
+                    clearInterval(syncedStartTimer); syncedStartTimer = null;
+                    number.textContent = 'スタート！'; text.textContent = '';
+                    number.classList.add('start-label');
+                    playSound('start');
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                        isGameStarted = true;
+                        nyokkiBtn.classList.remove('game-waiting');
+                        const durationSec = rules.time === 'unlimited' ? 0 : ((parseInt(rules.time) || 3) * 60);
+                        const timerStartAt = Number(resetAt) + 6000;
+                        // 新しいゲームのタイマー開始時刻を全端末へ同期。
+                        if (onlineReady && roomRef) {
+                            roomRef.child('game').transaction(game => {
+                                if (!game || game.isGameOver || Number(game.resetAt || 0) !== Number(resetAt)) return;
+                                game.timerStartAt = timerStartAt;
+                                game.timerDurationSec = durationSec;
+                                return game;
+                            });
+                        }
+                        startTimer(timerStartAt, durationSec);
+                    }, 700);
+                }
+            };
+            tick();
+            syncedStartTimer = setInterval(tick, 50);
+        }
+
+        function resetGameUIOnly(syncedResetAt = null) {
+            // 前ゲームのタイマーを完全に止め、新ゲームのタイマーを1本だけ作る。
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+            lastTimerStartAt = 0;
+            lastTimerDurationSec = -1;
+            stopMushroomTimer();
+            if (mushroomInterval) { clearInterval(mushroomInterval); mushroomInterval = null; }
+            mushroomReactionCounts = {};
+            currentCount = 0;
+            currentCountSpan.textContent = "0";
+            maxCountSpan.textContent = maxCount;
+            myKaburiCount = 0;
+            isDisqualified = false;
+
+            players.forEach(p => {
+                p.score = 0;
+                p.isDisqualified = false;
+                p.kaburiCount = 0;
+            });
+
+            toggleState = false;
+            if (myakuImage) myakuImage.src = 'myak.jpg';
+            if (myakuImgCard) myakuImgCard.classList.remove('shake-effect');
+
+            chatMessages.innerHTML = '';
+            if (floatingChatArea) floatingChatArea.innerHTML = '';
+            const rankingChatMessages = document.getElementById('rankingChatMessages');
+            if (rankingChatMessages) rankingChatMessages.innerHTML = '';
+
+            updateLiveRanking();
+            resultModal.classList.remove('active');
+            mushroomResultOverlay.classList.remove('active');
+            if (mushroomResultDisplayTimer) { clearTimeout(mushroomResultDisplayTimer); mushroomResultDisplayTimer = null; }
+            lastMushroomResultKey = '';
+            playSound('reset');
+            if (syncedResetAt) startSyncedRuleAndCountdown(syncedResetAt);
+            else beginGameWithCountdown();
+        }
+
+        async function resetGameState() {
+            const localResetAt = Date.now() + serverTimeOffset;
+            if (onlineReady && roomRef) {
+                try {
+                    const resetAt = localResetAt;
+                    await roomRef.child('game').transaction(game => {
+                        if (!game) game = {};
+                        game.currentCount = 0;
+                        // 最高到達点はゲームをリセットしても保持する。
+                        game.maxCount = Number(game.maxCount || 0);
+                        game.toggleState = false;
+                        game.lastPressAt = 0;
+                        game.lastPlayerId = '';
+                        game.lastWasKaburi = false;
+                        game.lastKaburiPlayerId = '';
+                        game.lastKaburiPlayerIds = [];
+                        game.lastKaburiAt = 0;
+                        game.pendingWin = null;
+                        game.lockedUntil = 0;
+                        game.isGameOver = false;
+                        game.gameOverReason = '';
+                        // 前回ゲームのタイマーを引き継がない
+                        game.timerStartAt = 0;
+                        game.timerDurationSec = 0;
+                        game.resetAt = resetAt;
+                        game.resetBy = myPlayerId;
+                        game.chatResetAt = resetAt;
+                        game.syncedStartAt = resetAt + 3000;
+                        game.mushroom = { active: false, startAt: 0, nextAt: resetAt + 30000 + Math.floor(Math.random() * 60000), counts: {}, lastResult: '', lastRanking: [], lastResultAt: 0 };
+                        game.players = game.players || {};
+                        Object.keys(game.players).forEach(id => {
+                            if (id !== myPlayerId && game.players[id] && game.players[id].connected === false) {
+                                delete game.players[id];
+                                return;
+                            }
+                            game.players[id].score = 0;
+                            game.players[id].isDisqualified = false;
+                            game.players[id].kaburiCount = 0;
+                        });
+                        game.rules = {
+                            time: document.getElementById('ruleTime').value,
+                            fail: document.getElementById('ruleFail').value,
+                            success: document.getElementById('ruleSuccess').value,
+                            win: document.getElementById('ruleWin').value,
+                            disqualify: document.getElementById('ruleDisqualify').value,
+                            mushroom: document.getElementById('ruleMushroom').value
+                        };
+                        return game;
+                    });
+                    lastChatResetAt = resetAt;
+                    await roomRef.child('chat').remove();
+                } catch (err) {
+                    console.error(err);
+                    addLogMessage('⚠️ リセットの同期に失敗しました。もう一度お試しください。', true);
+                    return;
+                }
+            }
+            resetGameUIOnly(localResetAt);
+        }
+
+        restartBtn.addEventListener('click', () => {
+            // 結果発表を閉じてゲーム画面へ戻る。
+            // Firebase側のゲーム終了状態はそのままにする。
+            // ここで isGameOver を false にすると、次の同期で
+            // 同じ最終結果が再び表示されてしまうため変更しない。
+            resultModal.classList.remove('active');
+        });
+
+        // チャット・ログ機能
+        const chatInput = document.getElementById('chatInput');
+        const chatSubmit = document.getElementById('chatSubmit');
+        const chatMessages = document.getElementById('chatMessages');
+
+        const floatingChatArea = document.getElementById('floatingChatArea');
+
+        function addLogMessage(text, isAlert = false) {
+            const allowFloatingDisplay = !resultModal.classList.contains('active');
+
+            // 画面下部の従来ログにも記録（現在は非表示）
+            const msgDiv = document.createElement('div');
+            if (isAlert) {
+                msgDiv.style.color = '#b83d53';
+            }
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // 上位3人の下にあるチャットログにも表示
+            const rankingChatMessages = document.getElementById('rankingChatMessages');
+            if (rankingChatMessages) {
+                const rankingMsg = document.createElement('div');
+                rankingMsg.className = 'ranking-chat-message';
+                if (isAlert) {
+                    rankingMsg.style.color = '#b83d53';
+                }
+                rankingMsg.textContent = text;
+                rankingChatMessages.appendChild(rankingMsg);
+                rankingChatMessages.scrollTop = rankingChatMessages.scrollHeight;
+
+                // ログが増えすぎないよう最大30件
+                while (rankingChatMessages.children.length > 30) {
+                    rankingChatMessages.removeChild(rankingChatMessages.firstChild);
+                }
+            }
+
+            // ボタン画面の下から上へ流して、上で消す
+            if (!allowFloatingDisplay) return;
+
+            const floatingMsg = document.createElement('div');
+            floatingMsg.className = 'floating-chat-message';
+            floatingMsg.style.left = `${7 + Math.random() * 86}%`;
+            if (isAlert) {
+                floatingMsg.style.color = '#b83d53';
+                floatingMsg.style.borderColor = '#e6b8c1';
+            }
+            floatingMsg.textContent = text;
+            floatingChatArea.appendChild(floatingMsg);
+
+            // アニメーション終了後にDOMから削除
+            setTimeout(() => {
+                floatingMsg.remove();
+            }, 3900);
+        }
 
 
-let state={turn:0,rolled:false,gameOver:false,pieces:players.map(()=>[-1,-1,-1,-1]),remaining:0,total:0,selected:null,extra:false};
-let audioCtx=null;
-const $=id=>document.getElementById(id);
-function sound(type){
- try{
-  audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.connect(g);g.connect(audioCtx.destination);
-  const now=audioCtx.currentTime;
-  if(type==='t'){o.frequency.setValueAtTime(240,now);o.frequency.exponentialRampToValueAtTime(900,now+.28);g.gain.setValueAtTime(.001,now);g.gain.exponentialRampToValueAtTime(.22,now+.03);g.gain.exponentialRampToValueAtTime(.001,now+.38);o.start();o.stop(now+.4)}
-  else if(type==='cut'){o.type='square';o.frequency.setValueAtTime(150,now);o.frequency.exponentialRampToValueAtTime(55,now+.2);g.gain.setValueAtTime(.18,now);g.gain.exponentialRampToValueAtTime(.001,now+.27);o.start();o.stop(now+.28)}
-  else {o.frequency.setValueAtTime(type==='win'?440:330,now);o.frequency.exponentialRampToValueAtTime(type==='win'?880:500,now+.16);g.gain.setValueAtTime(.001,now);g.gain.exponentialRampToValueAtTime(.14,now+.02);g.gain.exponentialRampToValueAtTime(.001,now+.27);o.start();o.stop(now+.28)}
- }catch(e){}
-}
-function log(t){const d=document.createElement('div');d.textContent=t;$('log').prepend(d)}
-function toast(t){$('toast').textContent=t;$('toast').classList.remove('show');void $('toast').offsetWidth;$('toast').classList.add('show')}
-function popup(title,text){$('popTitle').textContent=title;$('popText').textContent=text;$('overlay').classList.add('show')}
-$('closePop').onclick=()=>{$('overlay').classList.remove('show')};
+        // かぶらず成功したとき、現在の数＋「ミャク」をボタン上に表示。
+        function showMyakuCountEffect(count) {
+            if (!nyokkiBtn) return;
+            const effect = document.createElement('div');
+            effect.className = 'myaku-count-effect';
+            effect.textContent = `${Number(count) || 0}ミャク`;
+            nyokkiBtn.appendChild(effect);
+            setTimeout(() => effect.remove(), 950);
+        }
 
-function boardCells(){
- const a=[];
- for(let c=0;c<5;c++)a.push([0,c]);
- for(let r=1;r<5;r++)a.push([r,4]);
- for(let c=3;c>=0;c--)a.push([4,c]);
- for(let r=3;r>=1;r--)a.push([r,0]);
- return a;
-}
-const cells=boardCells();
-function buildGrid(){
- $('grid').innerHTML='';
- for(let r=0;r<5;r++)for(let c=0;c<5;c++){
-  const d=document.createElement('div');d.className='cell';
-  const oi=cells.findIndex(x=>x[0]===r&&x[1]===c);
-  if(oi>=0){d.innerHTML='<span>'+String(oi+1).padStart(2,'0')+'</span>';d.dataset.outer=oi}
-  if(r===2&&c===2){d.className+=' goal';d.textContent='ゴール';}
-  $('grid').appendChild(d);
- }
- [[4,2],[2,0],[0,2],[2,4]].forEach((rc,i)=>{
-   const d=$('grid').children[rc[0]*5+rc[1]];
-   d.classList.add('home');d.innerHTML='<span>'+players[i].name+'・マディナ</span>';
- });
-}
-function cellCenter(rc){return {x:(rc[1]+.5)*20,y:(rc[0]+.5)*20}}
-function render(){
- document.querySelectorAll('.piece').forEach(x=>x.remove());
- players.forEach((p,pi)=>{
-  state.pieces[pi].forEach((pos,mi)=>{
-   const el=document.createElement('div');el.className='piece '+p.cls;el.textContent=mi+1;el.dataset.p=pi;el.dataset.m=mi;
-   if(pos<0){
-     const homes=[[4,2],[2,0],[0,2],[2,4]][pi];
-     const ox=[-7,7,-7,7][mi], oy=[-7,-7,7,7][mi];
-     el.style.left=(homes[1]*20+10+ox)+'%';el.style.top=(homes[0]*20+10+oy)+'%';
-   }else if(pos>=N){
-     const k=pos-N;
-     const rc=[[1,1],[1,2],[1,3],[2,3],[3,3],[3,2],[3,1],[2,1]][k%INNER];
-     const c=cellCenter(rc);el.style.left=c.x+'%';el.style.top=c.y+'%';
-   }else{
-     const oi=(p.start-pos+N)%N,rc=cells[oi],c=cellCenter(rc);
-     el.style.left=c.x+'%';el.style.top=c.y+'%';
-   }
-   if(pi===0&&state.rolled&&state.remaining>0){
-     const legal=legalPieceSteps(0,mi);
-     if(legal.length){el.classList.add('active');el.onclick=()=>selectPiece(mi)}
-   }
-   $('board').appendChild(el);
-  });
- });
- $('turn').textContent=state.gameOver?'ゲーム終了':players[state.turn].name+'の番';
- $('status').textContent=state.gameOver?'おつかれさまでした。':state.turn===0?(state.rolled?'駒を選び、進むマス数を決めてください。':'棒を振ってください。'):'CPUが考えています…';
- $('scores').innerHTML=players.map((p,i)=>{
-  const g=state.pieces[i].filter(x=>x===N+INNER-1).length;
-  return `<div><span class="dot" style="background:${p.color}"></span> ${p.name}　ゴール ${g}/4　場の駒 ${state.pieces[i].filter(x=>x>=0&&x<N).length}</div>`;
- }).join('');
- renderMoveControls();
-}
-function renderMoveControls(){
- const box=$('moveControls'); if(!box)return;
- box.innerHTML='';
- if(state.turn!==0||!state.rolled||state.remaining<=0)return;
- const title=document.createElement('div');title.innerHTML='<b>残り '+state.remaining+' マス</b>'+(state.selected===null?'　駒をタップ':'　→ 進む数を選択');box.appendChild(title);
- if(state.selected!==null){
-  const row=document.createElement('div');row.className='actions';row.style.marginTop='8px';
-  for(let n=1;n<=state.remaining;n++){
-   const b=document.createElement('button');b.className='btn alt';b.textContent=n+'マス';b.onclick=()=>moveSelected(n);row.appendChild(b);
-  }
-  box.appendChild(row);
-  const b=document.createElement('button');b.className='btn alt';b.style.marginTop='8px';b.textContent='駒の選択をやめる';b.onclick=()=>{state.selected=null;render()};box.appendChild(b);
- }
-}
-function shakeSticks(vals){
- [...document.querySelectorAll('.stick')].forEach((e,i)=>{e.classList.toggle('back',!vals[i]);e.animate([{transform:'rotate(-28deg)'},{transform:'rotate(28deg)'},{transform:'rotate(7deg)'}],{duration:340,delay:i*55})});
-}
-function throwSticks(pi,done){
- const vals=[0,0,0,0].map(()=>Math.random()<.5?1:0),tarb=vals.every(v=>v===0),base=tarb?8:vals.reduce((a,b)=>a+b,0);
- shakeSticks(vals);sound(tarb?'t':'roll');
- if(pi===0){
-   state.total+=base;
-   $('sum').textContent=tarb?'ターブ！ +8':state.total;
-   log('あなた：'+(tarb?'ターブ！ 8':'合計 '+base+(state.total!==base?' → 累計 '+state.total:'')));
-   if(tarb){toast('✨ ターブ！ 8 ＋もう一度');state.rolled=false;state.remaining=0;render();setTimeout(()=>throwSticks(0,done),900);return;}
-   state.remaining=state.total;state.rolled=true;state.selected=null;render();done&&done();
- }else{
-   state.total=base;
-   $('sum').textContent=tarb?'ターブ！ 8':base;
-   log(players[pi].name+'：'+(tarb?'ターブ！ 8':'合計 '+base));
-   if(tarb){toast(players[pi].name+' ターブ！');setTimeout(()=>throwSticks(pi,done),900);return;}
-   done&&done();
- }
-}
-function roll(){
- if(state.gameOver||state.turn!==0||state.rolled)return;
- state.total=0;state.remaining=0;state.selected=null;
- throwSticks(0,()=>{ if(state.total===0){state.rolled=false;state.turn=1;render();setTimeout(cpuTurn,650)} });
-}
-function legalPieceSteps(pi,mi){
- const pos=state.pieces[pi][mi],out=[];
- if(pos===N+INNER-1)return out;
- const max=state.remaining;
- for(let n=1;n<=max;n++){
-   const np=pos<0?n-1:pos+n;
-   if(np<=N+INNER-1)out.push(n);
- }
- return out;
-}
-function selectPiece(mi){
- if(state.turn!==0||!state.rolled)return;
- if(!legalPieceSteps(0,mi).length)return;
- state.selected=mi;render();toast('進む数を選択');
-}
-function cutCheck(pi,old,np){
- if(np>=N||np<0)return false;
- const mover=players[pi];
- const oldStep=old<0?-1:old;
- for(let j=0;j<players.length;j++)if(j!==pi){
-   for(let k=0;k<4;k++){
-    const q=state.pieces[j][k];
-    if(q<0||q>=N)continue;
-    const global=(players[j].start-q+N)%N;
-    const d=(mover.start-global+N)%N;
-    if(d>oldStep&&d<=np){state.pieces[j][k]=-1;return true;}
-   }
- }
- return false;
-}
-function applyMove(pi,mi,steps){
- const old=state.pieces[pi][mi];
- const np=old<0?steps-1:old+steps;
- if(np>N+INNER-1)return {cut:false,goal:false};
- const cut=cutCheck(pi,old,np);
- state.pieces[pi][mi]=np;
- const goal=np===N+INNER-1;
- if(cut){sound('cut');toast('✂️ カット！！');log(players[pi].name+'が相手駒をカット！相手はマディナへ');}
- if(goal){sound('win');toast('🏁 ゴール！');log(players[pi].name+'の駒がゴール！');}
- return {cut,goal};
-}
-function moveSelected(steps){
- const mi=state.selected;if(mi===null)return;
- if(!legalPieceSteps(0,mi).includes(steps))return;
- const ev=applyMove(0,mi,steps);
- state.remaining-=steps;state.selected=null;
- const g=state.pieces[0].filter(x=>x===N+INNER-1).length;
- if(g===4){finish(0);return}
- if(ev.cut||ev.goal){state.remaining=0;state.rolled=false;render();setTimeout(()=>takeTurn(0),650);return}
- if(state.remaining>0){state.rolled=true;render();return}
- endNormalTurn(0);
-}
-function finish(pi){
- state.gameOver=true;state.rolled=false;render();popup(players[pi].name+'の勝利！','4個すべてゴールしました。');sound('win');confetti();
-}
-function endNormalTurn(pi){
- state.rolled=false;state.remaining=0;state.total=0;state.selected=null;
- if(state.extra){state.extra=false;state.turn=pi;render();setTimeout(()=>takeTurn(pi),450);return}
- state.turn=(pi+1)%4;render();if(state.turn!==0)setTimeout(cpuTurn,800);
-}
-function takeTurn(pi){
- if(state.gameOver)return;
- state.turn=pi;state.rolled=false;state.remaining=0;state.total=0;state.selected=null;render();
- if(pi!==0)setTimeout(cpuTurn,550);
-}
-function cpuMove(pi){
- const amount=state.total;
- const moves=[];
- for(let mi=0;mi<4;mi++){
-   const pos=state.pieces[pi][mi];if(pos===N+INNER-1)continue;
-   const np=pos<0?amount-1:pos+amount;
-   if(np<=N+INNER-1)moves.push({mi,np});
- }
- if(!moves.length){endNormalTurn(pi);return}
- let best=moves[0],score=-999;
- for(const m of moves){
-   let s=Math.random()*8;
-   if(m.np===N+INNER-1)s+=100;
-   if(m.np>=N)s+=15;
-   if(m.np<N){
-     // bonus when the move passes an opponent
-     const before=state.pieces[pi][m.mi];
-     const clone=state.pieces.map(a=>a.slice());
-     const willCut=cutCheckPreview(pi,before,m.np);
-     if(willCut)s+=70;
-   }
-   if(m.np>best.np)s+=3;
-   if(s>score){score=s;best=m}
- }
- const ev=applyMove(pi,best.mi,amount);
- render();setTimeout(()=>{
-   const g=state.pieces[pi].filter(x=>x===N+INNER-1).length;
-   if(g===4){finish(pi);return}
-   if(ev.cut||ev.goal){state.extra=true}
-   endNormalTurn(pi);
- },600);
-}
-function cutCheckPreview(pi,old,np){
- if(np>=N||np<0)return false;
- const mover=players[pi],oldStep=old<0?-1:old;
- for(let j=0;j<players.length;j++)if(j!==pi)for(let k=0;k<4;k++){
-  const q=state.pieces[j][k];if(q<0||q>=N)continue;
-  const global=(players[j].start-q+N)%N,d=(mover.start-global+N)%N;
-  if(d>oldStep&&d<=np)return true;
- }
- return false;
-}
-function cpuTurn(){
- if(state.gameOver||state.turn===0||state.rolled)return;
- const pi=state.turn;
- state.total=0;state.remaining=0;
- throwSticks(pi,()=>{setTimeout(()=>cpuMove(pi),650)});
-}
-$('rollBtn').onclick=roll;
-$('autoBtn').onclick=()=>{if(state.turn===0&&state.rolled&&state.remaining>0&&state.selected!==null)moveSelected(Math.min(state.remaining,legalPieceSteps(0,state.selected).slice(-1)[0]||1))};
-function start(){state={turn:0,rolled:false,gameOver:false,pieces:players.map(()=>[-1,-1,-1,-1]),remaining:0,total:0,selected:null,extra:false};$('start').style.display='none';$('game').style.display='block';buildGrid();render();log('ゲーム開始！あなたの番です。')}
-$('startBtn').onclick=start;
-$('newBtn').onclick=()=>{if(confirm('ゲームを最初からやり直しますか？')){state={turn:0,rolled:false,gameOver:false,pieces:players.map(()=>[-1,-1,-1,-1]),remaining:0,total:0,selected:null,extra:false};$('log').innerHTML='';render();log('新しいゲームを開始しました。')}};
-function confetti(){for(let i=0;i<50;i++){const e=document.createElement('i');e.className='confetti';e.style.left=Math.random()*100+'vw';e.style.top='-20px';e.style.animationDelay=Math.random()*.4+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),1600)}}
-function init(){buildGrid()}
-init();
-})();
+        function sendMessage() {
+            const text = chatInput.value.trim();
+            if (text === '') return;
+            if (onlineReady && roomRef) addOnlineChat(text);
+            else addLogMessage(`${myPlayerName || 'あなた'}: ${text}`);
+            chatInput.value = '';
+            resizeChatInput();
+        }
+
+        function resizeChatInput() {
+            chatInput.style.height = '36px';
+            chatInput.style.height = Math.max(36, chatInput.scrollHeight) + 'px';
+        }
+
+        chatSubmit.addEventListener('click', sendMessage);
+        chatInput.addEventListener('input', resizeChatInput);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        resizeChatInput();
+
+        // リアクションボタンのイベント設定
+        const reactionBtns = document.querySelectorAll('.reaction-btn');
+        reactionBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const reactionEmoji = btn.getAttribute('data-reaction');
+
+                // キノコタイム中は🍄だけをカウント
+                if (isMushroomTime) {
+                    if (reactionEmoji !== '🍄') return;
+                    const me = players.find(p => p.isMe);
+                    if (!me || me.isDisqualified) return;
+                    if (onlineReady && roomRef) {
+                        // Firebaseのサーバー時刻で5秒の終了境界を判定。
+                        // 終了後に届いたタップはカウントしない。
+                        roomRef.child('game').transaction(game => {
+                            if (!game || !game.mushroom || !game.mushroom.active || !game.players || !game.players[myPlayerId]) return;
+                            const startAt = Number(game.mushroom.startAt || 0);
+                            if (!startAt || getServerNow() >= startAt + 5000) return;
+                            game.mushroom.counts = game.mushroom.counts || {};
+                            game.mushroom.counts[myPlayerId] = Number(game.mushroom.counts[myPlayerId] || 0) + 1;
+                            return game;
+                        }).then(result => {
+                            if (!result.committed) return;
+                            mushroomReactionCounts[me.id] = (mushroomReactionCounts[me.id] || 0) + 1;
+                            mushroomMyCount.textContent = `あなた：${mushroomReactionCounts[me.id]}回`;
+                            showMushroomReactionFx();
+                        }).catch(err => console.warn('キノコリアクション送信エラー', err));
+                    } else {
+                        mushroomReactionCounts[me.id] = (mushroomReactionCounts[me.id] || 0) + 1;
+                        mushroomMyCount.textContent = `あなた：${mushroomReactionCounts[me.id]}回`;
+                        showMushroomReactionFx();
+                    }
+                    // キノコタイムの🍄はチャット／リアクションログへ送信しない。
+                    // 各端末のローカル演出とカウントだけ更新する。
+                    playSound('reaction');
+                    return;
+                }
+
+                if (onlineReady && roomRef) {
+                    roomRef.child('reactions').push({ name: myPlayerName, emoji: reactionEmoji, createdAt: firebase.database.ServerValue.TIMESTAMP });
+                } else {
+                    playSound('reaction');
+                    addLogMessage(`${myPlayerName || 'あなた'}: ${reactionEmoji}`);
+                }
+            });
+        });
+
+        // ミャクミャクボタンクリック時の挙動（シミュレーション：自分またはCPUが被る）
+        const nyokkiBtn = document.getElementById('nyokkiBtn');
+        let nyokkiLockTimer = null;
+        function updateNyokkiLock(game) {
+            if (!nyokkiBtn) return;
+            if (nyokkiLockTimer) { clearTimeout(nyokkiLockTimer); nyokkiLockTimer = null; }
+            const meData = game?.players?.[myPlayerId];
+            const playerUntil = Number(meData?.nyokkiCooldownUntil || 0);
+            const globalUntil = Number(game?.lockedUntil || 0);
+            const until = Math.max(playerUntil, globalUntil);
+            const remaining = until - getServerNow();
+            if (remaining > 0) {
+                nyokkiBtn.classList.add('nyokki-locked');
+                nyokkiBtn.style.pointerEvents = 'none';
+                nyokkiBtn.style.opacity = '0.45';
+                nyokkiLockTimer = setTimeout(() => {
+                    nyokkiLockTimer = null;
+                    updateNyokkiLock(game);
+                }, Math.min(remaining + 50, 1100));
+            } else {
+                nyokkiBtn.classList.remove('nyokki-locked');
+                if (!isMushroomTime) {
+                    nyokkiBtn.style.pointerEvents = '';
+                    nyokkiBtn.style.opacity = '';
+                }
+            }
+        }
+        const myakuImage = document.getElementById('myakuImage');
+        const myakuImgCard = document.getElementById('myakuImgCard');
+        let toggleState = false;
+
+        // スマホでも「押した！」が指に追従して見えるように、touch/pointer操作でも押下演出を明示。
+        nyokkiBtn.addEventListener('pointerdown', () => nyokkiBtn.classList.add('is-pressed'));
+        const clearNyokkiPressed = () => nyokkiBtn.classList.remove('is-pressed');
+        nyokkiBtn.addEventListener('pointerup', clearNyokkiPressed);
+        nyokkiBtn.addEventListener('pointercancel', clearNyokkiPressed);
+        nyokkiBtn.addEventListener('pointerleave', clearNyokkiPressed);
+
+        // Firebaseオンライン対戦版：ミャクボタン
+        nyokkiBtn.addEventListener('click', async () => {
+            if (isGameOver || !isGameStarted || !onlineReady || !roomRef) return;
+
+            const me = players.find(p => p.isMe);
+            if (!me || me.isDisqualified || isDisqualified) {
+                addLogMessage('⚠️ あなたは失格しているため参加できません。', true);
+                return;
+            }
+
+            // Firebaseのサーバー時刻との差を使い、端末時計のズレを補正。
+            const now = Date.now() + serverTimeOffset;
+
+            try {
+                const result = await roomRef.child('game').transaction(game => {
+                    game = game || {
+                        currentCount: 0,
+                        maxCount: 0,
+                        toggleState: false,
+                        lastPressAt: 0,
+                        lastPlayerId: '',
+                        isGameOver: false,
+                        startedAt: firebase.database.ServerValue.TIMESTAMP
+                    };
+
+                    if (game.isGameOver) return;
+
+                    const myPlayerData = game.players && game.players[myPlayerId];
+                    if (!myPlayerData || myPlayerData.isDisqualified) return;
+
+                    // かぶり判定中（直前の押下から0.2秒以内）は、全員を同じ「かぶりグループ」に
+                    // 参加させるため、1.5秒の全体ロックを一時的に無視する。
+                    const withinKaburiWindow = game.lastPressAt &&
+                        game.lastPlayerId &&
+                        game.lastPlayerId !== myPlayerId &&
+                        (now - Number(game.lastPressAt) <= KABURI_WINDOW_MS);
+                    if (Number(game.lockedUntil || 0) > now && !withinKaburiWindow) return;
+                    if (Number(myPlayerData.nyokkiCooldownUntil || 0) > now) return;
+
+                    const kaburi = withinKaburiWindow;
+
+                    const successVal = parseInt(document.getElementById('ruleSuccess').value) || 1;
+                    const failVal = document.getElementById('ruleFail').value;
+                    const winTarget = parseInt(document.getElementById('ruleWin').value);
+                    const disqualifyVal = document.getElementById('ruleDisqualify').value;
+
+                    // 「かぶり」は0.2秒以内に別プレイヤーが押した場合のみ。
+                    // ルール②〜⑤の数値・判定方法は元ゲームの設定をそのまま使用。
+                    if (kaburi) {
+                        const target = game.lastPlayerId;
+                        const targetPlayer = game.players && game.players[target];
+                        const currentPlayer = game.players && game.players[myPlayerId];
+
+                        if (!targetPlayer || !currentPlayer ||
+                            targetPlayer.isDisqualified || currentPlayer.isDisqualified) {
+                            return game;
+                        }
+
+                        // 今回実際にかぶった2人だけをペナルティ対象にする。
+                        // かぶっていないプレイヤーには一切影響させない。
+                        const kaburiPlayerIds = [...new Set([target, myPlayerId])];
+
+                        // 先に押した人には、通常押下としてすでに成功得点が入っている。
+                        // かぶりが成立した場合は、その「先に入った成功得点」を取り消してから
+                        // かぶり時の減点だけを適用する。
+                        // ただし、直前の押下自体がすでにかぶりだった場合は、成功得点は入っていないので取り消さない。
+                        const targetWasPendingWin = !!(game.pendingWin && game.pendingWin.playerId === target);
+
+                        // 優勝点到達待ちのプレイヤーが0.2秒以内にかぶった場合は、
+                        // 保留していた「優勝候補」そのものを取り消す。
+                        // これを消さないと、かぶり処理の後に保留処理が実行され、
+                        // 減点・失格になった後でも優勝メッセージが出てしまう。
+                        if (targetWasPendingWin) {
+                            game.pendingWin = null;
+                        }
+
+                        const targetWasNormalSuccess = game.lastWasKaburi !== true && !targetWasPendingWin;
+                        if (targetWasNormalSuccess && game.players[target] && !game.players[target].isDisqualified) {
+                            game.players[target].score = Math.max(0, Number(game.players[target].score || 0) - successVal);
+                        }
+
+                        kaburiPlayerIds.forEach(pid => {
+                            const p = game.players[pid];
+                            if (!p || p.isDisqualified) return;
+
+                            // かぶり時は成功得点を加算せず、設定した減点だけを適用する。
+                            if (failVal === "0") {
+                                p.score = 0;
+                            } else {
+                                const deduct = parseInt(failVal) || 0;
+                                p.score = Math.max(0, Number(p.score || 0) + deduct);
+                            }
+
+                            // 失格回数：かぶったプレイヤーだけ +1
+                            p.kaburiCount = Number(p.kaburiCount || 0) + 1;
+
+                            // 設定回数に達したら、そのプレイヤーだけ失格
+                            if (disqualifyVal !== "unlimited") {
+                                const limitCount = parseInt(disqualifyVal);
+                                if (limitCount > 0 && p.kaburiCount >= limitCount) {
+                                    p.isDisqualified = true;
+                                }
+                            }
+
+                            p.nyokkiCooldownUntil = now + NYOKKI_COOLDOWN_MS;
+                        });
+
+                        game.currentCount = 0;
+                        game.lastPressAt = now;
+                        game.lastPlayerId = myPlayerId;
+                        game.lastWasKaburi = true;
+                        game.lastKaburiPlayerId = target;
+                        game.lastKaburiPlayerIds = kaburiPlayerIds;
+                        game.lastKaburiAt = now;
+                        game.lockedUntil = now + KABURI_GLOBAL_LOCK_MS;
+                        return game;
+                    }
+
+                    game.toggleState = !game.toggleState;
+                    game.currentCount = (game.currentCount || 0) + successVal;
+                    game.maxCount = Math.max(game.maxCount || 0, game.currentCount);
+                    game.lastPressAt = now;
+                    game.lastPlayerId = myPlayerId;
+                    game.lastWasKaburi = false;
+                    game.lockedUntil = 0;
+                    if (game.players && game.players[myPlayerId]) {
+                        game.players[myPlayerId].nyokkiCooldownUntil = now + NYOKKI_COOLDOWN_MS;
+                    }
+
+                    if (game.players && game.players[myPlayerId]) {
+                        const nextScore = (game.players[myPlayerId].score || 0) + successVal;
+
+                        // 優勝点に到達する押下だけは、0.2秒のかぶり判定が終わるまで保留。
+                        // その間に別プレイヤーが押してかぶった場合、先に得点を入れないので
+                        // 「先に優勝してしまう」ことを防ぐ。
+                        if (nextScore >= winTarget) {
+                            game.pendingWin = {
+                                playerId: myPlayerId,
+                                score: nextScore,
+                                dueAt: now + KABURI_WINDOW_MS
+                            };
+                        } else {
+                            game.players[myPlayerId].score = nextScore;
+                            game.pendingWin = null;
+                        }
+                    }
+
+                    return game;
+                });
+
+                if (!result.committed) return;
+                const committedGame = result.snapshot.val() || {};
+                if (committedGame.pendingWin && committedGame.pendingWin.playerId === myPlayerId) {
+                    finalizePendingWin(committedGame.pendingWin.playerId, committedGame.pendingWin.dueAt);
+                }
+                playSound(committedGame.lastWasKaburi ? 'kaburi' : 'success');
+            } catch (err) {
+                console.error(err);
+                addLogMessage('⚠️ 通信エラーが発生しました。もう一度押してください。', true);
+            }
+        });
+
+        // 優勝点到達時は、かぶり判定の0.2秒が終わってから確定する。
+        function finalizePendingWin(playerId, dueAt) {
+            setTimeout(() => {
+                if (!onlineReady || !roomRef) return;
+                roomRef.child('game').transaction(game => {
+                    if (!game || game.isGameOver || !game.pendingWin) return;
+                    if (game.pendingWin.playerId !== playerId || Number(game.pendingWin.dueAt || 0) !== Number(dueAt)) return;
+                    const p = game.players && game.players[playerId];
+                    if (!p || p.isDisqualified) { game.pendingWin = null; return game; }
+                    p.score = Number(game.pendingWin.score || p.score || 0);
+                    game.pendingWin = null;
+                    game.isGameOver = true;
+                    game.gameOverReason = `目標ポイント ${parseInt(game.rules?.win || game.rules?.winningScore || 0) || p.score}点達成で優勝！`;
+                    return game;
+                });
+            }, KABURI_WINDOW_MS + 20);
+        }
+
+        // Firebaseオンライン対戦本体
+        const KABURI_WINDOW_MS = 200;
+        const NYOKKI_COOLDOWN_MS = 1000;
+        const KABURI_GLOBAL_LOCK_MS = 1500;
+        const firebaseConfig = {
+            // Firebaseコンソール → プロジェクトの設定 → ウェブアプリの設定値を入れてください。
+            apiKey: "AIzaSyBpBPqcCPmYezU04n9oMoAystxmmmRRYtE",
+            authDomain: "myakunyokki.firebaseapp.com",
+            databaseURL: "https://myakunyokki-default-rtdb.firebaseio.com",
+            projectId: "myakunyokki",
+            storageBucket: "myakunyokki.firebasestorage.app",
+            messagingSenderId: "203772417465",
+            appId: "1:203772417465:web:6071efc543695661ac1268",
+            measurementId: "G-HYG23GPBVW"
+        };
+
+        let onlineReady = false;
+        let roomRef = null;
+        let playerRef = null;
+        // 全員共通の1部屋だけを使用
+        const roomId = 'main';
+        let myPlayerId = localStorage.getItem('myakuPlayerId');
+        if (!myPlayerId) {
+            myPlayerId = 'p_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+            localStorage.setItem('myakuPlayerId', myPlayerId);
+        }
+        let myPlayerName = localStorage.getItem('myakuPlayerName') || '';
+        let serverTimeOffset = 0;
+        function getServerNow() { return Date.now() + serverTimeOffset; }
+        let onlineListenersBound = false;
+        let reactionListenerStartedAt = Date.now();
+
+        const onlineOverlay = document.getElementById('onlineRoomOverlay');
+        const onlineNameInput = document.getElementById('onlineNameInput');
+        const onlineJoinBtn = document.getElementById('onlineJoinBtn');
+        const onlineJoinError = document.getElementById('onlineJoinError');
+        const myNameDisplay = document.getElementById('myNameDisplay');
+        const myAvatar = document.getElementById('myAvatar');
+
+        function setFirebaseStatus(text, ok = false) {
+            // 画面上のFirebase接続表示は非表示にしています。
+        }
+
+        function renderParticipantList() {
+            if (!participantList) return;
+            participantList.innerHTML = '';
+            players.slice().sort((a,b) => {
+                if (a.isDisqualified !== b.isDisqualified) return a.isDisqualified ? 1 : -1;
+                return b.score - a.score || a.name.localeCompare(b.name, 'ja');
+            }).forEach(p => {
+                const row = document.createElement('div');
+                row.className = 'participant-row' + (p.isDisqualified ? ' disqualified' : '');
+                row.innerHTML = `
+                    <span>${p.isMe ? '⭐' : '👤'}</span>
+                    <span class="participant-name">${p.name || '名無し'}${p.isMe ? '（あなた）' : ''}</span>
+                    <span class="participant-score">${p.score}点</span>
+                    <span class="participant-status">${p.isDisqualified ? '失格' : '参加中'}</span>`;
+                participantList.appendChild(row);
+            });
+        }
+
+        let lastShownKaburiAt = 0;
+        let lastHeardPressAt = 0;
+        let lastAppliedResetAt = 0;
+        let lastChatResetAt = 0;
+
+        function applyOnlineGameState(game) {
+            if (!game) return;
+
+            // A端末のリセットをFirebase経由で全端末へ反映。
+            const incomingResetAt = Number(game.resetAt || 0);
+            const previousResetAt = lastAppliedResetAt;
+            if (incomingResetAt > 0 && incomingResetAt !== lastAppliedResetAt) {
+                lastAppliedResetAt = incomingResetAt;
+                lastChatResetAt = Number(game.chatResetAt || game.resetAt || 0);
+                if (game.rules) {
+                    if (game.rules.time) document.getElementById('ruleTime').value = game.rules.time;
+                    if (game.rules.fail) document.getElementById('ruleFail').value = game.rules.fail;
+                    if (game.rules.success) document.getElementById('ruleSuccess').value = game.rules.success;
+                    if (game.rules.win) document.getElementById('ruleWin').value = game.rules.win;
+                    if (game.rules.disqualify) document.getElementById('ruleDisqualify').value = game.rules.disqualify;
+                    if (game.rules.mushroom) document.getElementById('ruleMushroom').value = game.rules.mushroom;
+                }
+                updateCurrentRules(game.rules || null);
+                // 初回読み込みでは既存ゲームをリセットせず、Firebase上の進行中状態をそのまま復元。
+                // 2回目以降の新しいresetAtだけ、従来どおり3カウントを表示する。
+                const isInitialSync = previousResetAt === 0;
+                if (!isInitialSync) resetGameUIOnly(incomingResetAt);
+            }
+
+            currentCount = Number(game.currentCount || 0);
+            maxCount = Number(game.maxCount || 0);
+            toggleState = !!game.toggleState;
+            currentCountSpan.textContent = currentCount;
+            maxCountSpan.textContent = maxCount;
+            myakuImage.src = toggleState ? 'myak2.jpg' : 'myak.jpg';
+
+            const pressAt = Number(game.lastPressAt || 0);
+            if (pressAt > 0 && pressAt !== lastHeardPressAt) {
+                lastHeardPressAt = pressAt;
+                if (game.lastWasKaburi) {
+                    if (game.lastPlayerId !== myPlayerId) playSound('kaburi');
+                } else {
+                    if (game.lastPlayerId !== myPlayerId) playSound('success');
+                    showMyakuCountEffect(game.currentCount);
+                }
+            }
+
+            if (game.lastWasKaburi && pressAt === lastHeardPressAt) {
+                myakuImage.src = 'myak3.jpg';
+                myakuImgCard.classList.add('shake-effect');
+                setTimeout(() => {
+                    myakuImage.src = toggleState ? 'myak2.jpg' : 'myak.jpg';
+                    myakuImgCard.classList.remove('shake-effect');
+                }, 1000);
+            }
+
+            const remotePlayers = game.players || {};
+            players = Object.entries(remotePlayers).map(([id, p]) => ({
+                id,
+                name: p.name || '名無し',
+                score: Number(p.score || 0),
+                isMe: id === myPlayerId,
+                isDisqualified: !!p.isDisqualified,
+                kaburiCount: Number(p.kaburiCount || 0)
+            }));
+
+            const me = players.find(p => p.isMe);
+            isDisqualified = !!(me && me.isDisqualified);
+
+            participantsText.textContent = `${players.length}人が参加中`;
+            renderParticipantList();
+
+            if (game.lastWasKaburi && Number(game.lastKaburiAt || 0) > 0 && Number(game.lastKaburiAt) !== lastShownKaburiAt) {
+                lastShownKaburiAt = Number(game.lastKaburiAt);
+                const kaburiIds = Array.isArray(game.lastKaburiPlayerIds) && game.lastKaburiPlayerIds.length
+                    ? game.lastKaburiPlayerIds
+                    : [game.lastKaburiPlayerId];
+                const outNames = kaburiIds.map(id => game.players?.[id]?.name || '名無し');
+                const uniqueNames = [...new Set(outNames)];
+                const nameText = uniqueNames.map(name => `${name}さん`).join('・');
+                showOutPopup(`⚡ ${nameText}
+アウトー！！`);
+                addLogMessage(`⚡ ${nameText}がかぶった！ アウトー！！`, true);
+            }
+
+            updateLiveRanking();
+
+            if (game.lastPlayerId === myPlayerId && game.lastWasKaburi !== true) {
+                // 自分の成功音は、状態が更新されたときだけ鳴らすための軽いUI処理。
+            }
+
+            updateNyokkiLock(game);
+
+            // リロード後もゲーム開始時刻をFirebaseから復元し、端末ごとの時計・経過時間でズレないようにする。
+            if (Number(game.timerStartAt || 0) > 0 && !game.isGameOver) {
+                isGameStarted = true;
+                const durationSec = Number(game.timerDurationSec || 0);
+                startTimer(Number(game.timerStartAt), durationSec);
+            }
+
+            if (game.mushroom) {
+                const now = getServerNow();
+                if (game.mushroom.active && Number(game.mushroom.startAt || 0) > 0) {
+                    startMushroomTime(game.mushroom.startAt, game.mushroom.counts || {});
+                } else if (!game.mushroom.active && game.mushroom.nextAt && Number(game.mushroom.nextAt) > now && !isGameOver && document.getElementById('ruleMushroom').value === 'on') {
+                    if (mushroomScheduleTimeout) clearTimeout(mushroomScheduleTimeout);
+                    mushroomScheduleTimeout = setTimeout(() => {
+                        roomRef.child('game').transaction(g => {
+                            if (!g || g.isGameOver || !g.mushroom || g.mushroom.active) return;
+                            const target = Number(g.mushroom.nextAt || 0);
+                            if (getServerNow() + 100 < target) return;
+                            g.mushroom.active = true;
+                            g.mushroom.startAt = getServerNow();
+                            g.mushroom.counts = {};
+                            return g;
+                        });
+                    }, Math.max(0, Number(game.mushroom.nextAt) - now));
+                }
+            }
+
+            // キノコタイム終了時の上位3人を表示。全クライアントで同じ結果を共有する。
+            if (game.mushroom && Number(game.mushroom.lastResultAt || 0) > 0 && Array.isArray(game.mushroom.lastRanking)) {
+                const resultKey = String(game.mushroom.lastResultAt);
+                if (resultKey !== lastMushroomResultKey) {
+                    showMushroomResult(game.mushroom.lastRanking, resultKey);
+                    if (game.isGameOver) {
+                        // キノコ結果を少し見せてから最終結果へ。
+                        setTimeout(() => {
+                            if (game.isGameOver && !resultModal.classList.contains('active')) {
+                                triggerGameOver(game.gameOverReason || '試合終了！');
+                            }
+                        }, 2500);
+                    }
+                }
+            }
+
+            if (game.isGameOver && !isGameOver && !mushroomResultOverlay.classList.contains('active')) {
+                triggerGameOver(game.gameOverReason || '試合終了！');
+            }
+        }
+
+        function addOnlineChat(text) {
+            if (!roomRef || !myPlayerName) return;
+            roomRef.child('chat').push({
+                name: myPlayerName,
+                text: text,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            });
+        }
+
+        function setupFirebase() {
+            try {
+                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                    setFirebaseStatus('Firebase設定が必要');
+                    return false;
+                }
+
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                const db = firebase.database();
+
+                db.ref('.info/serverTimeOffset').on('value', snap => {
+                    serverTimeOffset = Number(snap.val() || 0);
+                });
+
+                setFirebaseStatus('Firebase 接続OK', true);
+                return true;
+            } catch (e) {
+                console.error(e);
+                setFirebaseStatus('Firebase 接続エラー');
+                return false;
+            }
+        }
+
+        async function joinOnlineRoom() {
+            const name = onlineNameInput.value.trim();
+
+            if (!name) {
+                onlineJoinError.textContent = '名前を入力してください。';
+                return;
+            }
+            if (!onlineReady) {
+                onlineJoinError.textContent = 'Firebase設定がまだ完了していません。';
+                return;
+            }
+
+            onlineJoinBtn.disabled = true;
+            onlineJoinError.textContent = '接続中…';
+
+            try {
+                myPlayerName = name;
+                localStorage.setItem('myakuPlayerName', myPlayerName);
+                roomRef = firebase.database().ref('rooms/' + roomId);
+
+                const gameRef = roomRef.child('game');
+                const playersRef = gameRef.child('players');
+
+                await gameRef.transaction(game => {
+                    if (game) return game;
+                    return {
+                        currentCount: 0,
+                        maxCount: 0,
+                        toggleState: false,
+                        lastPressAt: 0,
+                        lastPlayerId: '',
+                        lastWasKaburi: false,
+                        lastKaburiPlayerId: '',
+                        lastKaburiPlayerIds: [],
+                        lastKaburiAt: 0,
+                        lockedUntil: 0,
+                        resetAt: 0,
+                        chatResetAt: 0,
+                        isGameOver: false,
+                        gameOverReason: '',
+                        startedAt: firebase.database.ServerValue.TIMESTAMP,
+                        players: {}
+                    };
+                });
+
+                playerRef = playersRef.child(myPlayerId);
+                // リロード・タブ復帰では既存の得点や失格状態を保持する。
+                await playerRef.transaction(player => {
+                    if (player) {
+                        player.name = myPlayerName;
+                        player.connected = true;
+                        return player;
+                    }
+                    return {
+                        name: myPlayerName,
+                        score: 0,
+                        isDisqualified: false,
+                        kaburiCount: 0,
+                        nyokkiCooldownUntil: 0,
+                        connected: true,
+                        joinedAt: firebase.database.ServerValue.TIMESTAMP
+                    };
+                });
+                // 一時的なタブ移動・バックグラウンド化ではプレイヤーデータを消さず、
+                // 復帰時に同じ得点・失格回数をそのまま引き継げるようにする。
+                playerRef.onDisconnect().update({ connected: false });
+
+                myNameDisplay.textContent = myPlayerName;
+                myAvatar.textContent = myPlayerName.charAt(0);
+
+                if (!onlineListenersBound) {
+                    gameRef.once('value').then(snap => {
+                        const g = snap.val();
+                        lastChatResetAt = Number(g?.chatResetAt || 0);
+                    });
+                    gameRef.on('value', snap => applyOnlineGameState(snap.val()));
+                    roomRef.child('chat').limitToLast(30).on('child_added', snap => {
+                        const m = snap.val();
+                        if (m && m.name && m.text && Number(m.createdAt || 0) > lastChatResetAt) {
+                            addLogMessage(`${m.name}: ${m.text}`);
+                            playSound('chat');
+                        }
+                    });
+                    reactionListenerStartedAt = Date.now();
+                    roomRef.child('reactions').limitToLast(50).on('child_added', snap => {
+                        const r = snap.val();
+                        if (!r || !r.name || !r.emoji) return;
+                        const createdAt = Number(r.createdAt || 0);
+                        if (createdAt && createdAt < reactionListenerStartedAt) return;
+                        addLogMessage(`${r.name}: ${r.emoji}`);
+                        playSound('reaction');
+                    });
+                    onlineListenersBound = true;
+                }
+
+                onlineOverlay.style.display = 'none';
+                setFirebaseStatus('オンライン：全員共通ルーム', true);
+                onlineJoinError.textContent = '';
+                startMushroomScheduler();
+            } catch (e) {
+                console.error(e);
+                onlineJoinError.textContent = '接続に失敗しました。Firebaseの設定とルールを確認してください。';
+                onlineJoinBtn.disabled = false;
+            }
+        }
+
+        // ブラウザを別タブへ移動したりバックグラウンドにした後でも、
+        // ゲームへ戻ったときに同じプレイヤーとして再接続する。
+        async function restorePlayerConnection() {
+            if (!onlineReady || !roomRef || !myPlayerName || !playerRef) return;
+            try {
+                await playerRef.transaction(player => {
+                    if (!player) {
+                        return {
+                            name: myPlayerName,
+                            score: 0,
+                            isDisqualified: false,
+                            kaburiCount: 0,
+                            nyokkiCooldownUntil: 0,
+                            connected: true,
+                            joinedAt: firebase.database.ServerValue.TIMESTAMP
+                        };
+                    }
+                    player.name = myPlayerName;
+                    player.connected = true;
+                    return player;
+                });
+                playerRef.onDisconnect().update({ connected: false });
+                startMushroomScheduler();
+            } catch (e) {
+                console.warn('復帰時の再接続に失敗しました', e);
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) restorePlayerConnection();
+        });
+        window.addEventListener('pageshow', () => restorePlayerConnection());
+
+        onlineJoinBtn.addEventListener('click', joinOnlineRoom);
+        onlineNameInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') joinOnlineRoom();
+        });
+
+        onlineReady = setupFirebase();
+
+        // 名前を一度入力すれば、リロード後も自動的に同じ名前で再接続する。
+        if (onlineReady && myPlayerName) {
+            onlineNameInput.value = myPlayerName;
+            joinOnlineRoom();
+        }
+
+        // チャットをFirebaseへ送る（既存の見た目・入力方法は変更しない）
+        const originalSendMessage = sendMessage;
+        sendMessage = function() {
+            const text = chatInput.value.trim();
+            if (text === '') return;
+            if (onlineReady && roomRef) {
+                addOnlineChat(text);
+                playSound('chat');
+            } else {
+                addLogMessage(`${myPlayerName || 'あなた'}: ${text}`);
+            }
+            chatInput.value = '';
+            resizeChatInput();
+        };
+
+        // ルール変更モーダル開閉
+        const ruleModal = document.getElementById('ruleModal');
+        const openRuleModalBtn = document.getElementById('openRuleModal');
+        const closeRuleModalBtn = document.getElementById('closeRuleModal');
+        const saveRuleBtn = document.getElementById('saveRuleBtn');
+
+        openRuleModalBtn.addEventListener('click', () => {
+            ruleModal.classList.add('active');
+        });
+
+        closeRuleModalBtn.addEventListener('click', () => {
+            ruleModal.classList.remove('active');
+        });
+
+        ruleModal.classList.remove('active');
+
+        ruleModal.addEventListener('click', (e) => {
+            if (e.target === ruleModal) {
+                ruleModal.classList.remove('active');
+            }
+        });
+
+        saveRuleBtn.addEventListener('click', () => {
+            // 設定を保存した時点でゲーム状態を完全リセットして再スタート
+            resetGameState();
+            ruleModal.classList.remove('active');
+        });
+
+        // リセットボタン
+        const resetGameBtn = document.getElementById('resetGameBtn');
+        resetGameBtn.addEventListener('click', () => {
+            if (confirm('ゲームをリセットして3カウントから再スタートしますか？')) resetGameState();
+        });
+
+        // 退出ボタン
+        const exitGameBtn = document.getElementById('exitGameBtn');
+        exitGameBtn.addEventListener('click', () => {
+            if (confirm('ゲームから退出しますか？')) {
+                if (onlineReady && roomRef && myPlayerId) {
+                    roomRef.child('game/players').child(myPlayerId).remove();
+                    if (playerRef) playerRef.onDisconnect().cancel();
+                    playerRef = null;
+                    roomRef = null;
+                }
+                localStorage.removeItem('myakuPlayerName');
+                myPlayerName = '';
+                onlineOverlay.style.display = 'flex';
+                onlineJoinBtn.disabled = false;
+                alert('ゲームから退出しました。');
+            }
+        });
+    
+// リアクションバーは通常時から表示し、キノコタイム中だけ浮き上がります。
 </script>
+
+
+<!-- Firebase setup:
+     1. Create a Firebase project and a Web App.
+     2. Enable Realtime Database.
+     3. Paste the Web App config into firebaseConfig below.
+     4. For testing, Realtime Database rules can allow authenticated/temporary access;
+        for production, tighten the rules.
+-->
+
 </body>
 </html>
