@@ -324,13 +324,13 @@
             background: #f0ebe4;
         }
 
-        /* ボタン画面の下から、ミャクのボタンに重なって上へ流れるチャット */
+        /* チャットはミャクのボタンに重なって、タイマー付近まで上へ流す */
         .floating-chat-area {
             position: fixed;
             left: 50%;
-            bottom: 105px;
+            bottom: 80px;
             width: min(92vw, 520px);
-            height: 75vh;
+            height: calc(100vh - 160px);
             transform: translateX(-50%);
             overflow: visible;
             margin: 0;
@@ -343,8 +343,9 @@
             left: 50%;
             bottom: 0;
             transform: translate(-50%, 18px);
-            width: auto;
-            max-width: 92%;
+            width: min(40vw, 300px);
+            max-width: 40vw;
+            box-sizing: border-box;
             padding: 7px 13px;
             border-radius: 18px;
             background: rgba(255,255,255,0.96);
@@ -359,7 +360,7 @@
             word-break: break-word;
             text-overflow: clip;
             opacity: 0;
-            animation: chatFloatUp 4.8s ease-out forwards;
+            animation: chatFloatUp 6.5s ease-out forwards;
             z-index: 10001;
         }
 
@@ -373,11 +374,11 @@
                 opacity: 1;
             }
             75% {
-                transform: translate(-50%, -68vh);
+                transform: translate(-50%, calc(-1 * (100vh - 230px)));
                 opacity: 0.95;
             }
             100% {
-                transform: translate(-50%, -75vh);
+                transform: translate(-50%, calc(-1 * (100vh - 170px)));
                 opacity: 0;
             }
         }
@@ -1364,8 +1365,23 @@
         let myKaburiCount = 0;
         let isDisqualified = false;
 
-        // プレイヤーのスコアデータ（自分「か」＋CPU参加者）
+        // プレイヤーのスコアデータ
         let players = [];
+
+        // 過去のバージョンでFirebaseに残ったCPUデータを識別する。
+        // 現在のゲームではCPU参加者を使用しない。
+        function isCpuPlayerData(player) {
+            if (!player || typeof player !== 'object') return false;
+            const name = String(player.name || '').trim();
+            const type = String(player.type || player.role || '').trim().toLowerCase();
+            return player.isCPU === true ||
+                   player.isCpu === true ||
+                   player.cpu === true ||
+                   type === 'cpu' ||
+                   /cpu/i.test(name) ||
+                   /ＣＰＵ/.test(name) ||
+                   /コンピューター/.test(name);
+        }
 
         const timerDisplay = document.getElementById('timerDisplay');
         const currentCountSpan = document.getElementById('currentCount');
@@ -1995,6 +2011,10 @@
                         game.mushroom = { active: false, startAt: 0, nextAt: resetAt + 30000 + Math.floor(Math.random() * 60000), counts: {}, lastResult: '', lastRanking: [], lastResultAt: 0 };
                         game.players = game.players || {};
                         Object.keys(game.players).forEach(id => {
+                            if (id !== myPlayerId && isCpuPlayerData(game.players[id])) {
+                                delete game.players[id];
+                                return;
+                            }
                             if (id !== myPlayerId && game.players[id] && game.players[id].connected === false) {
                                 delete game.players[id];
                                 return;
@@ -2074,7 +2094,21 @@
 
             const floatingMsg = document.createElement('div');
             floatingMsg.className = 'floating-chat-message';
-            floatingMsg.style.left = `${7 + Math.random() * 86}%`;
+            // 3レーン方式：短文は左右にも流し、長文は中央寄りにする。
+            // 直前と同じレーンを避けて、チャット同士が重なりにくくする。
+            const isLongChat = String(text).replace(/\s/g, '').length >= 14;
+            const shortLanes = ['20%', '50%', '80%'];
+            const longLanes = ['32%', '50%', '68%'];
+            const lanes = isLongChat ? longLanes : shortLanes;
+            const previousLane = window.__lastFloatingChatLane || '';
+            const availableLanes = lanes.filter(lane => lane !== previousLane);
+            const selectedLane = availableLanes[Math.floor(Math.random() * availableLanes.length)] || lanes[0];
+            floatingMsg.style.left = selectedLane;
+            window.__lastFloatingChatLane = selectedLane;
+            if (isLongChat) {
+                floatingMsg.style.width = 'min(62vw, 460px)';
+                floatingMsg.style.maxWidth = '62vw';
+            }
             if (isAlert) {
                 floatingMsg.style.color = '#b83d53';
                 floatingMsg.style.borderColor = '#e6b8c1';
@@ -2085,7 +2119,7 @@
             // アニメーション終了後にDOMから削除
             setTimeout(() => {
                 floatingMsg.remove();
-            }, 3900);
+            }, 6600);
         }
 
 
@@ -2170,7 +2204,7 @@
             });
         });
 
-        // ミャクミャクボタンクリック時の挙動（シミュレーション：自分またはCPUが被る）
+        // ミャクミャクボタンクリック時の挙動
         const nyokkiBtn = document.getElementById('nyokkiBtn');
         let nyokkiLockTimer = null;
         function updateNyokkiLock(game) {
@@ -2506,7 +2540,9 @@
             }
 
             const remotePlayers = game.players || {};
-            players = Object.entries(remotePlayers).map(([id, p]) => ({
+            players = Object.entries(remotePlayers)
+                .filter(([id, p]) => id === myPlayerId || !isCpuPlayerData(p))
+                .map(([id, p]) => ({
                 id,
                 name: p.name || '名無し',
                 score: Number(p.score || 0),
@@ -2520,6 +2556,21 @@
 
             participantsText.textContent = `${players.length}人が参加中`;
             renderParticipantList();
+
+            // Firebaseに残っている旧CPUデータも、参加者一覧へは表示せず削除する。
+            if (onlineReady && roomRef && !window.__oldCpuCleanupRunning) {
+                const cpuIds = Object.entries(remotePlayers)
+                    .filter(([id, p]) => id !== myPlayerId && isCpuPlayerData(p))
+                    .map(([id]) => id);
+                if (cpuIds.length) {
+                    window.__oldCpuCleanupRunning = true;
+                    const updates = {};
+                    cpuIds.forEach(id => { updates[`game/players/${id}`] = null; });
+                    roomRef.update(updates).finally(() => {
+                        window.__oldCpuCleanupRunning = false;
+                    });
+                }
+            }
 
             if (game.lastWasKaburi && Number(game.lastKaburiAt || 0) > 0 && Number(game.lastKaburiAt) !== lastShownKaburiAt) {
                 lastShownKaburiAt = Number(game.lastKaburiAt);
@@ -2644,6 +2695,17 @@
 
                 const gameRef = roomRef.child('game');
                 const playersRef = gameRef.child('players');
+
+                // 旧バージョンで保存されたCPU参加者をFirebaseから削除。
+                await playersRef.transaction(currentPlayers => {
+                    if (!currentPlayers) return currentPlayers;
+                    Object.keys(currentPlayers).forEach(id => {
+                        if (id !== myPlayerId && isCpuPlayerData(currentPlayers[id])) {
+                            delete currentPlayers[id];
+                        }
+                    });
+                    return currentPlayers;
+                });
 
                 await gameRef.transaction(game => {
                     if (game) return game;
