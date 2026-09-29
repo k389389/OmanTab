@@ -240,7 +240,6 @@
             width: 150px; height: 100px; border: 2px solid #e0dbd1; border-radius: 20px;
             background: #faf8f5; font-size: 52px; cursor: pointer;
             -webkit-tap-highlight-color: transparent; transition: transform 0.06s ease;
-            pointer-events: auto;
         }
         .mushroom-reaction-btn:active { transform: scale(0.88); }
 
@@ -324,28 +323,24 @@
             background: #f0ebe4;
         }
 
-        /* チャットはミャクのボタンに重なって、タイマー付近まで上へ流す */
+        /* ボタン画面の下を上方向へ流れるチャット */
         .floating-chat-area {
-            position: fixed;
-            left: 50%;
-            bottom: 80px;
-            width: min(92vw, 520px);
-            height: calc(100vh - 160px);
-            transform: translateX(-50%);
+            width: 100%;
+            min-height: 0;
+            height: 0;
+            position: relative;
             overflow: visible;
-            margin: 0;
+            margin-top: -2px;
             pointer-events: none;
-            z-index: 10000;
         }
 
         .floating-chat-message {
             position: absolute;
             left: 50%;
-            bottom: 0;
-            transform: translate(-50%, 18px);
-            width: min(40vw, 300px);
-            max-width: 40vw;
-            box-sizing: border-box;
+            bottom: 2px;
+            transform: translate(-50%, 0);
+            width: auto;
+            max-width: 92%;
             padding: 7px 13px;
             border-radius: 18px;
             background: rgba(255,255,255,0.96);
@@ -360,8 +355,8 @@
             word-break: break-word;
             text-overflow: clip;
             opacity: 0;
-            animation: chatFloatUp 6.5s ease-out forwards;
-            z-index: 10001;
+            animation: chatFloatUp 3.8s ease-out forwards;
+            z-index: 20;
         }
 
         @keyframes chatFloatUp {
@@ -369,16 +364,16 @@
                 transform: translate(-50%, 18px);
                 opacity: 0;
             }
-            10% {
+            12% {
                 transform: translate(-50%, 0);
                 opacity: 1;
             }
-            75% {
-                transform: translate(-50%, calc(-1 * (100vh - 230px)));
+            68% {
+                transform: translate(-50%, -25px);
                 opacity: 0.95;
             }
             100% {
-                transform: translate(-50%, calc(-1 * (100vh - 170px)));
+                transform: translate(-50%, -58px);
                 opacity: 0;
             }
         }
@@ -1162,7 +1157,7 @@
             <h2 class="mushroom-title">🍄 キノコターイム！！</h2>
             <div class="mushroom-countdown" id="mushroomCountdown">残り 5秒</div>
             <p class="mushroom-count">🍄をできるだけたくさん押そう！<br>いちばん多く押したプレイヤーが＋1点！</p>
-            <button class="mushroom-reaction-btn reaction-btn" id="mushroomReactionBtn" type="button" data-reaction="🍄">🍄</button>
+            <button class="mushroom-reaction-btn" id="mushroomReactionBtn" type="button">🍄</button>
             <p id="mushroomMyCount" style="margin:10px 0 0;font-weight:bold;color:#b83d53;">あなた：0回</p>
         </div>
     </div>
@@ -1365,23 +1360,8 @@
         let myKaburiCount = 0;
         let isDisqualified = false;
 
-        // プレイヤーのスコアデータ
+        // プレイヤーのスコアデータ（自分「か」＋CPU参加者）
         let players = [];
-
-        // 過去のバージョンでFirebaseに残ったCPUデータを識別する。
-        // 現在のゲームではCPU参加者を使用しない。
-        function isCpuPlayerData(player) {
-            if (!player || typeof player !== 'object') return false;
-            const name = String(player.name || '').trim();
-            const type = String(player.type || player.role || '').trim().toLowerCase();
-            return player.isCPU === true ||
-                   player.isCpu === true ||
-                   player.cpu === true ||
-                   type === 'cpu' ||
-                   /cpu/i.test(name) ||
-                   /ＣＰＵ/.test(name) ||
-                   /コンピューター/.test(name);
-        }
 
         const timerDisplay = document.getElementById('timerDisplay');
         const currentCountSpan = document.getElementById('currentCount');
@@ -1503,6 +1483,19 @@
 
         function finishMushroomTime() {
             if (!isMushroomTime) return;
+
+            // 端末ごとの通信遅延で、5秒ちょうど付近の🍄リアクションが
+            // 別端末の終了処理に先に消されないよう、確定処理だけ少し待つ。
+            // この間もisMushroomTimeはtrueのままなので、🍄を受け付けられる。
+            if (!finishMushroomTime._pending) {
+                finishMushroomTime._pending = true;
+                setTimeout(() => {
+                    finishMushroomTime._pending = false;
+                    finishMushroomTime();
+                }, 350);
+                return;
+            }
+
             clearMushroomLocalTimers();
             isMushroomTime = false;
             mushroomOverlay.classList.remove('active');
@@ -1516,7 +1509,7 @@
                     if (!game || !game.mushroom || !game.mushroom.active) return;
                     // 5秒の終了時刻を過ぎた後のリアクションは結果に含めない。
                     const mushroomStartAt = Number(game.mushroom.startAt || 0);
-                    if (mushroomStartAt > 0 && getServerNow() < mushroomStartAt + 5000) return;
+                    if (mushroomStartAt > 0 && getServerNow() < mushroomStartAt + 5300) return;
                     const counts = game.mushroom.counts || {};
                     const entries = Object.entries(counts);
                     const maxReactions = entries.length ? Math.max(...entries.map(([, c]) => Number(c || 0))) : 0;
@@ -2011,10 +2004,6 @@
                         game.mushroom = { active: false, startAt: 0, nextAt: resetAt + 30000 + Math.floor(Math.random() * 60000), counts: {}, lastResult: '', lastRanking: [], lastResultAt: 0 };
                         game.players = game.players || {};
                         Object.keys(game.players).forEach(id => {
-                            if (id !== myPlayerId && isCpuPlayerData(game.players[id])) {
-                                delete game.players[id];
-                                return;
-                            }
                             if (id !== myPlayerId && game.players[id] && game.players[id].connected === false) {
                                 delete game.players[id];
                                 return;
@@ -2094,21 +2083,7 @@
 
             const floatingMsg = document.createElement('div');
             floatingMsg.className = 'floating-chat-message';
-            // 3レーン方式：短文は左右にも流し、長文は中央寄りにする。
-            // 直前と同じレーンを避けて、チャット同士が重なりにくくする。
-            const isLongChat = String(text).replace(/\s/g, '').length >= 14;
-            const shortLanes = ['20%', '50%', '80%'];
-            const longLanes = ['32%', '50%', '68%'];
-            const lanes = isLongChat ? longLanes : shortLanes;
-            const previousLane = window.__lastFloatingChatLane || '';
-            const availableLanes = lanes.filter(lane => lane !== previousLane);
-            const selectedLane = availableLanes[Math.floor(Math.random() * availableLanes.length)] || lanes[0];
-            floatingMsg.style.left = selectedLane;
-            window.__lastFloatingChatLane = selectedLane;
-            if (isLongChat) {
-                floatingMsg.style.width = 'min(62vw, 460px)';
-                floatingMsg.style.maxWidth = '62vw';
-            }
+            floatingMsg.style.left = `${7 + Math.random() * 86}%`;
             if (isAlert) {
                 floatingMsg.style.color = '#b83d53';
                 floatingMsg.style.borderColor = '#e6b8c1';
@@ -2119,7 +2094,7 @@
             // アニメーション終了後にDOMから削除
             setTimeout(() => {
                 floatingMsg.remove();
-            }, 6600);
+            }, 3900);
         }
 
 
@@ -2174,7 +2149,7 @@
                         roomRef.child('game').transaction(game => {
                             if (!game || !game.mushroom || !game.mushroom.active || !game.players || !game.players[myPlayerId]) return;
                             const startAt = Number(game.mushroom.startAt || 0);
-                            if (!startAt || getServerNow() >= startAt + 5000) return;
+                            if (!startAt || getServerNow() >= startAt + 5300) return;
                             game.mushroom.counts = game.mushroom.counts || {};
                             game.mushroom.counts[myPlayerId] = Number(game.mushroom.counts[myPlayerId] || 0) + 1;
                             return game;
@@ -2204,7 +2179,7 @@
             });
         });
 
-        // ミャクミャクボタンクリック時の挙動
+        // ミャクミャクボタンクリック時の挙動（シミュレーション：自分またはCPUが被る）
         const nyokkiBtn = document.getElementById('nyokkiBtn');
         let nyokkiLockTimer = null;
         function updateNyokkiLock(game) {
@@ -2540,9 +2515,7 @@
             }
 
             const remotePlayers = game.players || {};
-            players = Object.entries(remotePlayers)
-                .filter(([id, p]) => id === myPlayerId || !isCpuPlayerData(p))
-                .map(([id, p]) => ({
+            players = Object.entries(remotePlayers).map(([id, p]) => ({
                 id,
                 name: p.name || '名無し',
                 score: Number(p.score || 0),
@@ -2556,21 +2529,6 @@
 
             participantsText.textContent = `${players.length}人が参加中`;
             renderParticipantList();
-
-            // Firebaseに残っている旧CPUデータも、参加者一覧へは表示せず削除する。
-            if (onlineReady && roomRef && !window.__oldCpuCleanupRunning) {
-                const cpuIds = Object.entries(remotePlayers)
-                    .filter(([id, p]) => id !== myPlayerId && isCpuPlayerData(p))
-                    .map(([id]) => id);
-                if (cpuIds.length) {
-                    window.__oldCpuCleanupRunning = true;
-                    const updates = {};
-                    cpuIds.forEach(id => { updates[`game/players/${id}`] = null; });
-                    roomRef.update(updates).finally(() => {
-                        window.__oldCpuCleanupRunning = false;
-                    });
-                }
-            }
 
             if (game.lastWasKaburi && Number(game.lastKaburiAt || 0) > 0 && Number(game.lastKaburiAt) !== lastShownKaburiAt) {
                 lastShownKaburiAt = Number(game.lastKaburiAt);
@@ -2695,17 +2653,6 @@
 
                 const gameRef = roomRef.child('game');
                 const playersRef = gameRef.child('players');
-
-                // 旧バージョンで保存されたCPU参加者をFirebaseから削除。
-                await playersRef.transaction(currentPlayers => {
-                    if (!currentPlayers) return currentPlayers;
-                    Object.keys(currentPlayers).forEach(id => {
-                        if (id !== myPlayerId && isCpuPlayerData(currentPlayers[id])) {
-                            delete currentPlayers[id];
-                        }
-                    });
-                    return currentPlayers;
-                });
 
                 await gameRef.transaction(game => {
                     if (game) return game;
