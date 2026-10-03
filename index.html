@@ -1,24 +1,233 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>Oman Tab Game</title>
-    <meta name="description" content="Oman Tab Game — built on Replit. Update this description to reflect the app." />
-    <meta name="robots" content="index, follow" />
-    <meta property="og:title" content="Oman Tab Game" />
-    <meta property="og:description" content="Oman Tab Game — built on Replit. Update this description to reflect the app." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Oman Tab Game" />
-    <meta name="twitter:description" content="Oman Tab Game — built on Replit. Update this description to reflect the app." />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>万博クロッシング - こみゃく試作</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#07121f;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;overflow:hidden}
+body{min-height:100vh}
+#app{height:100vh;display:flex;flex-direction:column}
+header{padding:8px 10px;background:#10283b;border-bottom:1px solid #34546b}
+.title{font-size:17px;font-weight:800;text-align:center}
+.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:6px}
+.card{background:#17374d;border-radius:8px;padding:5px;text-align:center;font-size:10px}
+.card b{display:block;font-size:16px;margin-top:1px}
+#stage{position:relative;flex:1;min-height:0;overflow:hidden;background:#86bd55}
+#world{position:absolute;inset:0;overflow:hidden}
+.lane{position:absolute;left:0;width:100%;height:10.5%;border-top:1px solid rgba(255,255,255,.25);border-bottom:1px solid rgba(0,0,0,.12)}
+.grass{background:#78b94e}
+.road{background:#555}
+.road:after{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px dashed rgba(255,255,255,.65)}
+.river{background:#4a9dd0}
+#goal{position:absolute;top:2%;left:3%;right:3%;height:8%;background:rgba(255,255,255,.82);color:#16344a;border-radius:12px;text-align:center;font-weight:900;padding:7px;z-index:2}
+#roadLines{position:absolute;inset:0;pointer-events:none}
+.player{
+ position:absolute;width:42px;height:42px;z-index:10;
+ display:flex;align-items:center;justify-content:center;
+ font-size:30px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.35));
+ transition:transform .13s ease-out,left .13s ease-out,bottom .13s ease-out;
+}
+.player .body{font-size:32px;line-height:1}
+.player.dead .body{animation:squash .55s ease-out forwards}
+@keyframes squash{
+ 0%{transform:scale(1,1) rotate(0)}
+ 18%{transform:scale(1.25,.72) rotate(-8deg)}
+ 35%{transform:scale(1.5,.42) rotate(7deg)}
+ 60%{transform:scale(1.22,.55) rotate(-5deg)}
+ 100%{transform:scale(1,.48) rotate(0);opacity:.72}
+}
+.player.dead.effect1 .body{animation:squash1 .55s ease-out forwards}
+.player.dead.effect2 .body{animation:squash2 .6s ease-out forwards}
+.player.dead.effect3 .body{animation:squash3 .55s ease-out forwards}
+@keyframes squash1{0%{transform:scale(1)}25%{transform:scale(1.65,.28)}55%{transform:scale(.75,.55) rotate(18deg)}100%{transform:scale(1.2,.38);opacity:.65}}
+@keyframes squash2{0%{transform:scale(1)}20%{transform:scale(.5,1.55)}45%{transform:scale(1.6,.35)}75%{transform:scale(.8,.5) rotate(-12deg)}100%{transform:scale(1.05,.42);opacity:.65}}
+@keyframes squash3{0%{transform:scale(1)}30%{transform:scale(1.8,.45) rotate(25deg)}55%{transform:scale(.45,.75) rotate(-22deg)}100%{transform:scale(1.15,.4);opacity:.65}}
+.obstacle{position:absolute;z-index:8;height:30px;border-radius:7px;background:#e8e8e8;box-shadow:0 3px 5px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:18px}
+.obstacle.car{background:#e44;color:#fff}
+.obstacle.bus{background:#f3c43e;color:#17202a}
+.obstacle.train{background:#8e68cf;color:#fff}
+#toast{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%) scale(.8);background:rgba(0,0,0,.8);border-radius:16px;padding:13px 20px;font-weight:900;font-size:22px;opacity:0;pointer-events:none;z-index:50;transition:.18s}
+#toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#status{position:absolute;left:8px;right:8px;bottom:8px;z-index:20;background:rgba(0,0,0,.58);border-radius:10px;padding:6px 8px;font-size:11px;text-align:center}
+#controls{background:#0d2233;padding:7px 6px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.ctrl{border:0;border-radius:10px;padding:8px 2px;color:#fff;font-weight:800;font-size:12px;touch-action:manipulation}
+.ctrl small{display:block;font-size:9px;opacity:.8}
+.red{background:#c83232}.blue{background:#2e69c9}.yellow{background:#b78b00}.green{background:#2e8b50}
+#next{display:none;margin:7px 8px 0;border:0;border-radius:10px;padding:9px;background:#fff;color:#142638;font-weight:900}
+.legend{font-size:9px;opacity:.7;text-align:center;padding:2px 0 4px}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="title">🌏 万博クロッシング　こみゃく試作</div>
+  <div class="scores">
+    <div class="card">今回の試合ハイスコア<b id="matchHigh">0</b></div>
+    <div class="card">あなたのハイスコア<b id="myHigh">0</b></div>
+    <div class="card">全体ハイスコア<b id="allHigh">0</b></div>
+  </div>
+</header>
+
+<div id="stage">
+  <div id="world">
+    <div id="goal">🏁 GOAL</div>
+    <div class="lane grass" style="top:10%;"></div>
+    <div class="lane road" style="top:20.5%;"></div>
+    <div class="lane grass" style="top:31%;"></div>
+    <div class="lane road" style="top:41.5%;"></div>
+    <div class="lane river" style="top:52%;"></div>
+    <div class="lane grass" style="top:62.5%;"></div>
+    <div class="lane road" style="top:73%;"></div>
+    <div class="lane grass" style="top:83.5%;"></div>
+    <div id="obstacles"></div>
+    <div id="players"></div>
+    <div id="toast"></div>
+    <div id="status">4人とも下からスタート。タップで1マス前進！ 車などにぶつからないように進もう。</div>
+  </div>
+</div>
+
+<div id="controls">
+  <button class="ctrl red" onclick="movePlayer(0)">🔴 こみゃく<small>タップで前進</small></button>
+  <button class="ctrl blue" onclick="movePlayer(1)">🔵 こみゃく<small>タップで前進</small></button>
+  <button class="ctrl yellow" onclick="movePlayer(2)">🟡 こみゃく<small>タップで前進</small></button>
+  <button class="ctrl green" onclick="movePlayer(3)">🟢 こみゃく<small>タップで前進</small></button>
+</div>
+<div class="legend">試作版：Firebase未接続。自己最高・全体最高はこの端末のlocalStorageで保存。</div>
+<button id="next" onclick="nextGroup()">次の4人をスタート</button>
+</div>
+
+<script>
+const colors=["red","blue","yellow","green"];
+const emojis=["🔴","🔵","🟡","🟢"];
+const players=colors.map((c,i)=>({id:i,score:0,alive:true,row:0,effect:(i%3)+1}));
+const stage=document.getElementById("stage");
+const world=document.getElementById("world");
+const playerLayer=document.getElementById("players");
+const obstacleLayer=document.getElementById("obstacles");
+const statusEl=document.getElementById("status");
+const toast=document.getElementById("toast");
+let matchHigh=0, roundOver=false, group=1;
+
+const CELL_H=10.5;
+function yForRow(row){ return 88 - row*CELL_H; }
+function renderPlayers(){
+  playerLayer.innerHTML="";
+  players.forEach(p=>{
+    const el=document.createElement("div");
+    el.className="player "+(p.alive?"":"dead effect"+p.effect);
+    el.id="p"+p.id;
+    el.style.left=(8+p.id*23)+"%";
+    el.style.bottom=yForRow(p.row)+"%";
+    el.innerHTML='<span class="body">'+emojis[p.id]+'</span>';
+    playerLayer.appendChild(el);
+  });
+}
+function makeObstacles(){
+  obstacleLayer.innerHTML="";
+  const rows=[
+    {top:20.5,kind:"car",speed:1.7,dir:1,count:2},
+    {top:41.5,kind:"bus",speed:1.1,dir:-1,count:2},
+    {top:73,kind:"train",speed:2.4,dir:1,count:1}
+  ];
+  rows.forEach((r,ri)=>{
+    for(let i=0;i<r.count;i++){
+      const o=document.createElement("div");
+      o.className="obstacle "+r.kind;
+      o.textContent=r.kind==="car"?"🚗":r.kind==="bus"?"🚌":"🚆";
+      o.style.top=r.top+"%";
+      o.style.width=(r.kind==="train"?18:13)+"%";
+      o.dataset.speed=(r.speed*r.dir).toString();
+      o.dataset.x=(i*48+(ri%2)*18)+"";
+      obstacleLayer.appendChild(o);
+    }
+  });
+}
+function animateObstacles(){
+  document.querySelectorAll(".obstacle").forEach(o=>{
+    let x=parseFloat(o.dataset.x||0);
+    x+=parseFloat(o.dataset.speed||1)*0.12;
+    if(x>105)x=-20;
+    if(x<-20)x=105;
+    o.dataset.x=x;
+    o.style.left=x+"%";
+  });
+  if(!roundOver) requestAnimationFrame(animateObstacles);
+}
+function getLaneForRow(row){
+  if(row===1)return 20.5;
+  if(row===3)return 41.5;
+  if(row===6)return 73;
+  return null;
+}
+function collision(p){
+  const lane=getLaneForRow(p.row);
+  if(lane===null)return false;
+  const px=8+p.id*23;
+  for(const o of document.querySelectorAll(".obstacle")){
+    if(Math.abs(parseFloat(o.style.top)-lane)<1){
+      const ox=parseFloat(o.dataset.x||0), ow=parseFloat(o.style.width||13);
+      if(px+6>ox && px-6<ox+ow)return true;
+    }
+  }
+  return false;
+}
+function movePlayer(id){
+  if(roundOver || !players[id].alive)return;
+  const p=players[id];
+  p.row++;
+  p.score++;
+  if(p.score>matchHigh)matchHigh=p.score;
+  updateScores();
+  renderPlayers();
+
+  if(collision(p)){
+    p.alive=false;
+    const el=document.getElementById("p"+id);
+    el.className="player dead effect"+p.effect;
+    toast.textContent=emojis[id]+" ぺしゃんこ！";
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"),650);
+  }else if(p.row>=8){
+    p.alive=false;
+    toast.textContent=emojis[id]+" ゴール！";
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"),700);
+  }
+  renderPlayers();
+  const alive=players.filter(p=>p.alive).length;
+  statusEl.textContent=alive?`プレイ中：残り ${alive}人　／　各こみゃくのスコアを競争中！`:`4人全員の挑戦終了。`;
+  if(alive===0){
+    roundOver=true;
+    setTimeout(()=>{
+      document.getElementById("next").style.display="block";
+      statusEl.textContent="4人全員が失敗またはゴールしました。次の4人へ交代できます。";
+    },500);
+  }
+}
+function nextGroup(){
+  group++;
+  players.forEach(p=>{p.score=0;p.alive=true;p.row=0;p.effect=(p.effect%3)+1});
+  matchHigh=0; roundOver=false;
+  document.getElementById("next").style.display="none";
+  statusEl.textContent=`グループ${group} スタート！ タップで1マス前進。`;
+  makeObstacles(); renderPlayers(); updateScores(); requestAnimationFrame(animateObstacles);
+}
+function updateScores(){
+  const my=Math.max(...players.map(p=>p.score),0);
+  const savedMy=Number(localStorage.getItem("komyakuMyHigh")||0);
+  const savedAll=Number(localStorage.getItem("komyakuAllHigh")||0);
+  if(my>savedMy)localStorage.setItem("komyakuMyHigh",my);
+  if(matchHigh>savedAll)localStorage.setItem("komyakuAllHigh",matchHigh);
+  document.getElementById("matchHigh").textContent=matchHigh;
+  document.getElementById("myHigh").textContent=Math.max(my,savedMy);
+  document.getElementById("allHigh").textContent=Math.max(matchHigh,savedAll);
+}
+makeObstacles();
+renderPlayers();
+updateScores();
+requestAnimationFrame(animateObstacles);
+</script>
+</body>
 </html>
