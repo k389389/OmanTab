@@ -91,8 +91,8 @@ function depth(row){return row-cam}
 function screen(row){
   const d=depth(row);
   // Crossy Road風：画面中央の消失点へ向かって道路が細くなる
-  const t=Math.max(-.05,Math.min(1.12,(d+1)/18));
-  const y=H*.82 - t*H*.67;
+  const t=Math.max(-.05,Math.min(1.12,(d+1)/15));
+  const y=H*.86 - t*H*.70;
   const scale=.46 + (1-t)*.68;
   return {t,y,scale};
 }
@@ -211,7 +211,16 @@ function animate(now){
   for(const it of items)it.t==="o"?drawObstacle(it.v):drawPlayer(it.v);
   requestAnimationFrame(animate);
 }
-resize();ensureWorld();updateScores();requestAnimationFrame(animate);
+function boot(){
+  resize();
+  ensureWorld();
+  updateScores();
+  draw();
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(()=>{ resize(); draw(); });
+setTimeout(()=>{ resize(); ensureWorld(); draw(); }, 80);
+boot();
 </script>
 </body>
 </html>
